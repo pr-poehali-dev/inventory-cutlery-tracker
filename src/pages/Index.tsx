@@ -349,9 +349,13 @@ const Index = () => {
     ];
     ws['!cols'] = colWidths;
 
-    XLSX.writeFile(wb, `Инвентаризация_${new Date().toISOString().split('T')[0]}.xlsx`);
-    toast.success('Excel-файл создан успешно');
+    XLSX.writeFile(wb, 'Инвентаризация_Полная_База.xlsx');
+    toast.success('Excel обновлен! Все данные в одном файле');
   };
+
+  useEffect(() => {
+    exportToExcel();
+  }, [portEntries, dickensEntries]);
 
   const getChartData = () => {
     return [...entries]
@@ -918,52 +922,6 @@ const Index = () => {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="shadow-xl border border-red-200 bg-gradient-to-br from-red-50 to-white">
-                <CardHeader className="border-b border-red-100">
-                  <CardTitle className="flex items-center gap-2 text-red-900 text-lg">
-                    <Icon name="Store" size={22} />
-                    PORT - Итого
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 space-y-3">
-                  {[
-                    { label: 'Всего вилок', value: portEntries.reduce((sum, e) => sum + e.forks, 0) },
-                    { label: 'Всего ножей', value: portEntries.reduce((sum, e) => sum + e.knives, 0) },
-                    { label: 'Всего ложек', value: portEntries.reduce((sum, e) => sum + e.spoons, 0) },
-                    { label: 'Всего тарелок', value: portEntries.reduce((sum, e) => sum + e.plates, 0) },
-                  ].map((item, i) => (
-                    <div key={i} className="flex justify-between items-center py-3 px-2 border-b border-red-100 last:border-0 hover:bg-red-50/50 rounded transition-colors">
-                      <span className="text-sm font-semibold text-red-900">{item.label}</span>
-                      <Badge className="bg-red-600 hover:bg-red-700 shadow-sm text-base px-3 py-1">{item.value}</Badge>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white">
-                <CardHeader className="border-b border-blue-100">
-                  <CardTitle className="flex items-center gap-2 text-blue-900 text-lg">
-                    <Icon name="Store" size={22} />
-                    Диккенс - Итого
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 space-y-3">
-                  {[
-                    { label: 'Всего вилок', value: dickensEntries.reduce((sum, e) => sum + e.forks, 0) },
-                    { label: 'Всего ножей', value: dickensEntries.reduce((sum, e) => sum + e.knives, 0) },
-                    { label: 'Всего ложек', value: dickensEntries.reduce((sum, e) => sum + e.spoons, 0) },
-                    { label: 'Всего тарелок', value: dickensEntries.reduce((sum, e) => sum + e.plates, 0) },
-                  ].map((item, i) => (
-                    <div key={i} className="flex justify-between items-center py-3 px-2 border-b border-blue-100 last:border-0 hover:bg-blue-50/50 rounded transition-colors">
-                      <span className="text-sm font-semibold text-blue-900">{item.label}</span>
-                      <Badge className="bg-blue-900 hover:bg-blue-950 shadow-sm text-base px-3 py-1">{item.value}</Badge>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
         </Tabs>
       </main>
