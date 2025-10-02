@@ -91,8 +91,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 body_data['plates'],
                 body_data['sugarTongs'],
                 body_data['iceTongs'],
-                body_data.get('responsibleName'),
-                body_data.get('responsibleDate')
+                body_data.get('responsible_name'),
+                body_data.get('responsible_date')
             ))
             
             new_entry = cur.fetchone()
@@ -151,8 +151,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 body_data['plates'],
                 body_data['sugarTongs'],
                 body_data['iceTongs'],
-                body_data.get('responsibleName'),
-                body_data.get('responsibleDate'),
+                body_data.get('responsible_name'),
+                body_data.get('responsible_date'),
                 entry_id
             ))
             

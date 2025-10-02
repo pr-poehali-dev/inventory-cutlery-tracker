@@ -1020,12 +1020,15 @@ const Index = () => {
                     <Card className="border-2 border-stone-200">
                       <CardHeader className="bg-stone-50">
                         <CardTitle className="text-lg">Все записи с ответственными</CardTitle>
-                        <CardDescription>Нажмите на запись, чтобы изменить ФИО или дату</CardDescription>
+                        <CardDescription>
+                          Нажмите на запись, чтобы изменить ФИО или дату. 
+                          Всего записей: {[...portEntries, ...dickensEntries].length}, 
+                          с ответственными: {[...portEntries, ...dickensEntries].filter(e => e.responsible_name && e.responsible_name.trim() !== '').length}
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <div className="space-y-3">
                           {[...portEntries, ...dickensEntries]
-                            .filter(entry => entry.responsible_name && entry.responsible_name.trim() !== '')
                             .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
                             .map((entry) => (
                               <div 
@@ -1036,12 +1039,14 @@ const Index = () => {
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-lg ${entry.venue === 'PORT' ? 'bg-red-100 group-hover:bg-red-200' : 'bg-blue-100 group-hover:bg-blue-200'} transition-colors`}>
-                                      <Icon name="UserCheck" size={18} className={entry.venue === 'PORT' ? 'text-red-600' : 'text-blue-600'} />
+                                      <Icon name={entry.responsible_name && entry.responsible_name.trim() ? 'UserCheck' : 'UserX'} size={18} className={entry.venue === 'PORT' ? 'text-red-600' : 'text-blue-600'} />
                                     </div>
                                     <div>
-                                      <p className="font-semibold text-stone-900">{entry.responsible_name}</p>
+                                      <p className="font-semibold text-stone-900">
+                                        {entry.responsible_name && entry.responsible_name.trim() ? entry.responsible_name : 'Не указан'}
+                                      </p>
                                       <p className="text-sm text-stone-600">
-                                        {entry.venue} • Дата: {new Date(entry.responsible_date || '').toLocaleDateString('ru-RU')}
+                                        {entry.venue} • {entry.responsible_date ? `Дата: ${new Date(entry.responsible_date).toLocaleDateString('ru-RU')}` : 'Дата не указана'}
                                       </p>
                                     </div>
                                   </div>
@@ -1054,11 +1059,11 @@ const Index = () => {
                                 </div>
                               </div>
                             ))}
-                          {[...portEntries, ...dickensEntries].filter(e => e.responsible_name && e.responsible_name.trim() !== '').length === 0 && (
+                          {[...portEntries, ...dickensEntries].length === 0 && (
                             <div className="text-center py-12 text-stone-500">
                               <Icon name="Inbox" size={64} className="mx-auto mb-4 text-stone-300" />
-                              <p className="text-lg font-medium mb-2">Нет записей с ответственными</p>
-                              <p className="text-sm">Добавьте ФИО и дату во вкладке "Инвентаризация"</p>
+                              <p className="text-lg font-medium mb-2">Нет записей</p>
+                              <p className="text-sm">Добавьте данные во вкладке "Инвентаризация"</p>
                             </div>
                           )}
                         </div>
