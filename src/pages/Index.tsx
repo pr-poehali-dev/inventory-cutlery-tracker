@@ -32,6 +32,8 @@ interface InventoryEntry {
   plates: number;
   sugar_tongs: number;
   ice_tongs: number;
+  responsible_name?: string;
+  responsible_date?: string;
   created_at?: string;
 }
 
@@ -78,6 +80,8 @@ const Index = () => {
     plates: '',
     sugarTongs: '',
     iceTongs: '',
+    responsibleName: '',
+    responsibleDate: new Date().toISOString().split('T')[0],
   });
 
   const colors = currentVenue === 'PORT' ? portColors : dickensColors;
@@ -150,6 +154,8 @@ const Index = () => {
           plates: Number(formData.plates) || 0,
           sugarTongs: Number(formData.sugarTongs) || 0,
           iceTongs: Number(formData.iceTongs) || 0,
+          responsibleName: formData.responsibleName,
+          responsibleDate: formData.responsibleDate,
         }),
       });
 
@@ -165,6 +171,8 @@ const Index = () => {
           plates: '',
           sugarTongs: '',
           iceTongs: '',
+          responsibleName: '',
+          responsibleDate: new Date().toISOString().split('T')[0],
         });
         await loadAllData();
         toast.success('Запись добавлена успешно');
@@ -200,6 +208,8 @@ const Index = () => {
           plates: editingEntry.plates,
           sugarTongs: editingEntry.sugar_tongs,
           iceTongs: editingEntry.ice_tongs,
+          responsibleName: editingEntry.responsible_name,
+          responsibleDate: editingEntry.responsible_date,
         }),
       });
 
@@ -507,7 +517,7 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="inventory" className="space-y-8">
-          <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-3 bg-gradient-to-r from-white via-stone-50 to-white border-2 border-stone-200 p-2.5 rounded-3xl shadow-2xl">
+          <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-4 bg-gradient-to-r from-white via-stone-50 to-white border-2 border-stone-200 p-2.5 rounded-3xl shadow-2xl">
             <TabsTrigger value="inventory" className={`rounded-2xl font-bold text-base py-3.5 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 hover:scale-105`}>
               <Icon name="Table" size={20} className="mr-2" />
               Инвентаризация
@@ -520,9 +530,17 @@ const Index = () => {
               <Icon name="TrendingUp" size={20} className="mr-2" />
               Сравнение
             </TabsTrigger>
+            <TabsTrigger value="comparison" className={`rounded-2xl font-bold text-base py-3.5 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 hover:scale-105`}>
+              <Icon name="TrendingUp" size={20} className="mr-2" />
+              Сравнение
+            </TabsTrigger>
+            <TabsTrigger value="responsible" className={`rounded-2xl font-bold text-base py-3.5 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 hover:scale-105`}>
+              <Icon name="UserCheck" size={20} className="mr-2" />
+              Ответственный
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="inventory" className="space-y-8">
+          <TabsContent value="inventory" className="space-y-8 animate-in fade-in-50 duration-700">
             <Card className="shadow-2xl border-0 bg-white/98 backdrop-blur-md overflow-hidden hover:shadow-3xl transition-shadow duration-300">
               <CardHeader className={`bg-gradient-to-r ${colors.accent} border-b border-stone-200/50`}>
                 <CardTitle className="flex items-center gap-3 text-xl font-bold text-stone-900">
