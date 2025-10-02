@@ -209,8 +209,8 @@ const Index = () => {
           plates: editingEntry.plates,
           sugarTongs: editingEntry.sugar_tongs,
           iceTongs: editingEntry.ice_tongs,
-          responsibleName: editingEntry.responsible_name,
-          responsibleDate: editingEntry.responsible_date,
+          responsible_name: editingEntry.responsible_name,
+          responsible_date: editingEntry.responsible_date,
         }),
       });
 
@@ -503,24 +503,14 @@ const Index = () => {
                 </button>
               </div>
 
-              <div className="flex gap-3">
-                <Button 
-                  onClick={() => window.location.href = '/history'} 
-                  className={`shadow-lg ${colors.primary} font-bold px-6 py-3 text-base hover:scale-105 transition-transform relative overflow-hidden group`}
-                >
-                  <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-                  <Icon name="History" size={18} className="mr-2 relative z-10" />
-                  <span className="relative z-10">История</span>
-                </Button>
-                <Button 
-                  onClick={exportToExcel} 
-                  className={`shadow-lg ${colors.primary} font-bold px-6 py-3 text-base hover:scale-105 transition-transform relative overflow-hidden group`}
-                >
-                  <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-                  <Icon name="FileSpreadsheet" size={18} className="mr-2 relative z-10" />
-                  <span className="relative z-10">Скачать Excel</span>
-                </Button>
-              </div>
+              <Button 
+                onClick={exportToExcel} 
+                className={`shadow-lg ${colors.primary} font-bold px-6 py-3 text-base hover:scale-105 transition-transform relative overflow-hidden group`}
+              >
+                <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                <Icon name="FileSpreadsheet" size={18} className="mr-2 relative z-10" />
+                <span className="relative z-10">Скачать Excel</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -1026,83 +1016,51 @@ const Index = () => {
               </CardHeader>
               <CardContent className="pt-8 pb-6">
                 <div className="space-y-6">
-                  <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <Icon name="Info" size={24} className="text-amber-600 mt-1" />
-                      <div>
-                        <h3 className="font-bold text-amber-900 mb-2">Как работает функция ответственного?</h3>
-                        <ul className="space-y-2 text-amber-800">
-                          <li className="flex items-start gap-2">
-                            <Icon name="Check" size={16} className="mt-1 text-amber-600" />
-                            <span>Перейдите во вкладку "Инвентаризация"</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <Icon name="Check" size={16} className="mt-1 text-amber-600" />
-                            <span>Заполните данные о количестве приборов</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <Icon name="Check" size={16} className="mt-1 text-amber-600" />
-                            <span>В разделе "Информация об ответственном" укажите ФИО и дату заполнения</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <Icon name="Check" size={16} className="mt-1 text-amber-600" />
-                            <span>При следующем заполнении можете указать нового ответственного</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <Icon name="Check" size={16} className="mt-1 text-amber-600" />
-                            <span>Вся история сохраняется на странице "История" в шапке сайта</span>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="grid gap-4">
                     <Card className="border-2 border-stone-200">
                       <CardHeader className="bg-stone-50">
-                        <CardTitle className="text-lg">Последние записи с ответственными</CardTitle>
+                        <CardTitle className="text-lg">Все записи с ответственными</CardTitle>
+                        <CardDescription>Нажмите на запись, чтобы изменить ФИО или дату</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-4">
-                        <div className="space-y-3 mb-6">
+                        <div className="space-y-3">
                           {[...portEntries, ...dickensEntries]
                             .filter(entry => entry.responsible_name && entry.responsible_name.trim() !== '')
                             .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
-                            .slice(0, 5)
                             .map((entry) => (
-                              <div key={entry.id} className="bg-stone-50 rounded-lg p-4 border border-stone-200">
+                              <div 
+                                key={entry.id} 
+                                onClick={() => handleEdit(entry)}
+                                className="bg-stone-50 rounded-lg p-4 border border-stone-200 hover:border-amber-400 hover:bg-amber-50 transition-all cursor-pointer group"
+                              >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${entry.venue === 'PORT' ? 'bg-red-100' : 'bg-blue-100'}`}>
+                                    <div className={`p-2 rounded-lg ${entry.venue === 'PORT' ? 'bg-red-100 group-hover:bg-red-200' : 'bg-blue-100 group-hover:bg-blue-200'} transition-colors`}>
                                       <Icon name="UserCheck" size={18} className={entry.venue === 'PORT' ? 'text-red-600' : 'text-blue-600'} />
                                     </div>
                                     <div>
                                       <p className="font-semibold text-stone-900">{entry.responsible_name}</p>
                                       <p className="text-sm text-stone-600">
-                                        {entry.venue} • {new Date(entry.responsible_date || '').toLocaleDateString('ru-RU')}
+                                        {entry.venue} • Дата: {new Date(entry.responsible_date || '').toLocaleDateString('ru-RU')}
                                       </p>
                                     </div>
                                   </div>
-                                  <Badge variant="outline" className="text-xs">
-                                    {new Date(entry.created_at || '').toLocaleDateString('ru-RU')}
-                                  </Badge>
+                                  <div className="flex items-center gap-3">
+                                    <Badge variant="outline" className="text-xs">
+                                      {new Date(entry.created_at || '').toLocaleDateString('ru-RU')}
+                                    </Badge>
+                                    <Icon name="Edit" size={16} className="text-stone-400 group-hover:text-amber-600" />
+                                  </div>
                                 </div>
                               </div>
                             ))}
                           {[...portEntries, ...dickensEntries].filter(e => e.responsible_name && e.responsible_name.trim() !== '').length === 0 && (
-                            <div className="text-center py-8 text-stone-500">
-                              <Icon name="Inbox" size={48} className="mx-auto mb-3 text-stone-300" />
-                              <p>Пока нет записей с ответственными</p>
+                            <div className="text-center py-12 text-stone-500">
+                              <Icon name="Inbox" size={64} className="mx-auto mb-4 text-stone-300" />
+                              <p className="text-lg font-medium mb-2">Нет записей с ответственными</p>
+                              <p className="text-sm">Добавьте ФИО и дату во вкладке "Инвентаризация"</p>
                             </div>
                           )}
-                        </div>
-                        <div className="flex items-center justify-center pt-4 border-t">
-                          <Button
-                            onClick={() => window.location.href = '/history'}
-                            className={`${colors.primary} font-bold px-8 py-6 text-base shadow-xl hover:scale-105 transition-transform`}
-                          >
-                            <Icon name="History" size={20} className="mr-2" />
-                            Открыть полную историю
-                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -1203,6 +1161,31 @@ const Index = () => {
                   value={editingEntry.ice_tongs}
                   onChange={(e) => setEditingEntry({ ...editingEntry, ice_tongs: Number(e.target.value) })}
                 />
+              </div>
+              <div className="col-span-2 pt-4 mt-4 border-t-2 border-stone-200">
+                <h3 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                  <Icon name="UserCheck" size={20} className="text-amber-600" />
+                  Информация об ответственном
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>ФИО ответственного</Label>
+                    <Input
+                      type="text"
+                      placeholder="Иванов Иван Иванович"
+                      value={editingEntry.responsible_name || ''}
+                      onChange={(e) => setEditingEntry({ ...editingEntry, responsible_name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Дата заполнения</Label>
+                    <Input
+                      type="date"
+                      value={editingEntry.responsible_date || ''}
+                      onChange={(e) => setEditingEntry({ ...editingEntry, responsible_date: e.target.value })}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
