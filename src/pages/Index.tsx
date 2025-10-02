@@ -680,6 +680,36 @@ const Index = () => {
                   </div>
                 </div>
 
+                <div className="mt-6 pt-6 border-t-2 border-stone-200">
+                  <h3 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                    <Icon name="UserCheck" size={20} className="text-amber-600" />
+                    Информация об ответственном
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="responsibleName" className="text-sm font-medium">ФИО ответственного</Label>
+                      <Input
+                        id="responsibleName"
+                        type="text"
+                        placeholder="Иванов Иван Иванович"
+                        value={formData.responsible_name}
+                        onChange={(e) => handleInputChange('responsible_name', e.target.value)}
+                        className="shadow-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="responsibleDate" className="text-sm font-medium">Дата заполнения</Label>
+                      <Input
+                        id="responsibleDate"
+                        type="date"
+                        value={formData.responsible_date}
+                        onChange={(e) => handleInputChange('responsible_date', e.target.value)}
+                        className="shadow-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="mt-8">
                   <Button onClick={handleSubmit} className={`w-full md:w-auto shadow-xl ${colors.primary} font-bold text-base py-6 px-8 hover:scale-105 transition-transform`}>
                     <Icon name="Check" size={20} className="mr-2" />
@@ -977,6 +1007,75 @@ const Index = () => {
                     <Bar dataKey="Диккенс" fill="#1e3a8a" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="responsible" className="space-y-8 animate-in fade-in-50 duration-700">
+            <Card className="shadow-2xl border-0 bg-white/98 backdrop-blur-md overflow-hidden">
+              <CardHeader className={`bg-gradient-to-r ${colors.accent} border-b border-stone-200/50`}>
+                <CardTitle className="flex items-center gap-3 text-xl font-bold text-stone-900">
+                  <div className={`p-2.5 rounded-xl ${colors.primary}`}>
+                    <Icon name="UserCheck" size={22} className="text-white" />
+                  </div>
+                  Управление информацией об ответственных
+                </CardTitle>
+                <CardDescription className="text-stone-600 font-medium">
+                  Указывайте ФИО и дату для каждой новой записи в форме добавления
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-8 pb-6">
+                <div className="space-y-6">
+                  <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <Icon name="Info" size={24} className="text-amber-600 mt-1" />
+                      <div>
+                        <h3 className="font-bold text-amber-900 mb-2">Как работает функция ответственного?</h3>
+                        <ul className="space-y-2 text-amber-800">
+                          <li className="flex items-start gap-2">
+                            <Icon name="Check" size={16} className="mt-1 text-amber-600" />
+                            <span>Перейдите во вкладку "Инвентаризация"</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <Icon name="Check" size={16} className="mt-1 text-amber-600" />
+                            <span>Заполните данные о количестве приборов</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <Icon name="Check" size={16} className="mt-1 text-amber-600" />
+                            <span>В разделе "Информация об ответственном" укажите ФИО и дату заполнения</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <Icon name="Check" size={16} className="mt-1 text-amber-600" />
+                            <span>При следующем заполнении можете указать нового ответственного</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <Icon name="Check" size={16} className="mt-1 text-amber-600" />
+                            <span>Вся история сохраняется на странице "История" в шапке сайта</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4">
+                    <Card className="border-2 border-stone-200">
+                      <CardHeader className="bg-stone-50">
+                        <CardTitle className="text-lg">Последние записи с ответственными</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-center py-8">
+                          <Button
+                            onClick={() => window.location.href = '/history'}
+                            className={`${colors.primary} font-bold px-8 py-6 text-base shadow-xl hover:scale-105 transition-transform`}
+                          >
+                            <Icon name="History" size={20} className="mr-2" />
+                            Открыть историю ответственных
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
