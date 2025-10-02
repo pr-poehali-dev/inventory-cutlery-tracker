@@ -155,8 +155,8 @@ const Index = () => {
           plates: Number(formData.plates) || 0,
           sugarTongs: Number(formData.sugarTongs) || 0,
           iceTongs: Number(formData.iceTongs) || 0,
-          responsibleName: formData.responsibleName,
-          responsibleDate: formData.responsibleDate,
+          responsible_name: formData.responsible_name,
+          responsible_date: formData.responsible_date,
         }),
       });
 
@@ -1063,13 +1063,45 @@ const Index = () => {
                         <CardTitle className="text-lg">Последние записи с ответственными</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
-                        <div className="flex items-center justify-center py-8">
+                        <div className="space-y-3 mb-6">
+                          {[...portEntries, ...dickensEntries]
+                            .filter(entry => entry.responsible_name && entry.responsible_name.trim() !== '')
+                            .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
+                            .slice(0, 5)
+                            .map((entry) => (
+                              <div key={entry.id} className="bg-stone-50 rounded-lg p-4 border border-stone-200">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-lg ${entry.venue === 'PORT' ? 'bg-red-100' : 'bg-blue-100'}`}>
+                                      <Icon name="UserCheck" size={18} className={entry.venue === 'PORT' ? 'text-red-600' : 'text-blue-600'} />
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold text-stone-900">{entry.responsible_name}</p>
+                                      <p className="text-sm text-stone-600">
+                                        {entry.venue} • {new Date(entry.responsible_date || '').toLocaleDateString('ru-RU')}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Badge variant="outline" className="text-xs">
+                                    {new Date(entry.created_at || '').toLocaleDateString('ru-RU')}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                          {[...portEntries, ...dickensEntries].filter(e => e.responsible_name && e.responsible_name.trim() !== '').length === 0 && (
+                            <div className="text-center py-8 text-stone-500">
+                              <Icon name="Inbox" size={48} className="mx-auto mb-3 text-stone-300" />
+                              <p>Пока нет записей с ответственными</p>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-center pt-4 border-t">
                           <Button
                             onClick={() => window.location.href = '/history'}
                             className={`${colors.primary} font-bold px-8 py-6 text-base shadow-xl hover:scale-105 transition-transform`}
                           >
                             <Icon name="History" size={20} className="mr-2" />
-                            Открыть историю ответственных
+                            Открыть полную историю
                           </Button>
                         </div>
                       </CardContent>
