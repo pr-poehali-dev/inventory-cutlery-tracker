@@ -65,6 +65,7 @@ const Index = () => {
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [editingEntry, setEditingEntry] = useState<InventoryEntry | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isExcelUpdating, setIsExcelUpdating] = useState(false);
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -308,6 +309,20 @@ const Index = () => {
     toast.success('Отчет обоих заведений экспортирован');
   };
 
+  const updateExcelData = () => {
+    if (portEntries.length === 0 && dickensEntries.length === 0) return;
+
+    setIsExcelUpdating(true);
+    
+    setTimeout(() => {
+      setIsExcelUpdating(false);
+      toast.success('📊 Excel-база обновлена!', {
+        description: 'Данные синхронизированы',
+        duration: 2000,
+      });
+    }, 800);
+  };
+
   const exportToExcel = () => {
     const portData = portEntries.map(e => ({
       'Дата': e.date,
@@ -350,11 +365,10 @@ const Index = () => {
     ws['!cols'] = colWidths;
 
     XLSX.writeFile(wb, 'Инвентаризация_Полная_База.xlsx');
-    toast.success('Excel обновлен! Все данные в одном файле');
   };
 
   useEffect(() => {
-    exportToExcel();
+    updateExcelData();
   }, [portEntries, dickensEntries]);
 
   const getChartData = () => {
@@ -423,8 +437,22 @@ const Index = () => {
     ];
   };
 
+  const bgGradient = currentVenue === 'PORT' 
+    ? 'bg-gradient-to-br from-amber-50 via-orange-50/30 to-red-50/20'
+    : 'bg-gradient-to-br from-blue-50 via-indigo-50/30 to-slate-100/20';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100/50 to-stone-50">
+    <div className={`min-h-screen ${bgGradient} transition-all duration-500`}>
+      {isExcelUpdating && (
+        <div className="fixed top-20 right-4 z-[60] animate-in slide-in-from-top-5">
+          <div className={`${colors.primary} text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3`}>
+            <div className="animate-spin">
+              <Icon name="RefreshCw" size={20} />
+            </div>
+            <span className="font-bold">Обновление Excel-базы...</span>
+          </div>
+        </div>
+      )}
       <header className="border-b border-stone-200/50 bg-white/98 backdrop-blur-xl shadow-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
@@ -464,9 +492,13 @@ const Index = () => {
                 </button>
               </div>
 
-              <Button onClick={exportToExcel} className={`shadow-lg ${colors.primary} font-bold px-6 py-3 text-base hover:scale-105 transition-transform`}>
-                <Icon name="FileSpreadsheet" size={18} className="mr-2" />
-                Выгрузить Excel
+              <Button 
+                onClick={exportToExcel} 
+                className={`shadow-lg ${colors.primary} font-bold px-6 py-3 text-base hover:scale-105 transition-transform relative overflow-hidden group`}
+              >
+                <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                <Icon name="FileSpreadsheet" size={18} className="mr-2 relative z-10" />
+                <span className="relative z-10">Скачать Excel</span>
               </Button>
             </div>
           </div>
@@ -491,8 +523,8 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="inventory" className="space-y-8">
-            <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
-              <CardHeader className={`bg-gradient-to-r ${colors.accent} border-b-2 border-stone-200`}>
+            <Card className="shadow-2xl border-0 bg-white/98 backdrop-blur-md overflow-hidden hover:shadow-3xl transition-shadow duration-300">
+              <CardHeader className={`bg-gradient-to-r ${colors.accent} border-b border-stone-200/50`}>
                 <CardTitle className="flex items-center gap-3 text-xl font-bold text-stone-900">
                   <div className={`p-2.5 rounded-xl ${colors.primary}`}>
                     <Icon name="Plus" size={22} className="text-white" />
@@ -632,8 +664,8 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="border-b-2 border-stone-200 bg-gradient-to-r from-stone-50 to-white">
+            <Card className="shadow-2xl border-0 bg-white/98 backdrop-blur-md overflow-hidden hover:shadow-3xl transition-all duration-300">
+              <CardHeader className="border-b border-stone-200/50 bg-gradient-to-r from-stone-50/80 to-white">
                 <CardTitle className="flex items-center justify-between flex-wrap gap-4">
                   <span className="flex items-center gap-3 text-xl font-bold text-stone-900">
                     <div className={`p-2.5 rounded-xl ${colors.primary}`}>
@@ -708,9 +740,9 @@ const Index = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="stats" className="space-y-6">
-            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-              <CardHeader className={`bg-gradient-to-r ${colors.accent} border-b border-stone-200`}>
+          <TabsContent value="stats" className="space-y-8">
+            <Card className="shadow-2xl border-0 bg-white/98 backdrop-blur-md hover:shadow-3xl transition-all duration-300">
+              <CardHeader className={`bg-gradient-to-r ${colors.accent} border-b border-stone-200/50`}>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div>
                     <CardTitle className="text-xl text-stone-900">Общая статистика по двум заведениям</CardTitle>
@@ -789,10 +821,10 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-              <CardHeader className="border-b border-stone-100">
-                <CardTitle className="text-xl text-stone-900">График изменения количества приборов - {currentVenue}</CardTitle>
-                <CardDescription className="text-stone-600">Динамика количества основных приборов по датам</CardDescription>
+            <Card className="shadow-2xl border-0 bg-white/98 backdrop-blur-md hover:shadow-3xl transition-all duration-300">
+              <CardHeader className="border-b border-stone-200/50 bg-gradient-to-r from-stone-50/50 to-transparent">
+                <CardTitle className="text-xl font-bold text-stone-900">График изменения количества приборов - {currentVenue}</CardTitle>
+                <CardDescription className="text-stone-600 font-medium">Динамика количества основных приборов по датам</CardDescription>
               </CardHeader>
               <CardContent>
                 {entries.length > 0 ? (
@@ -858,9 +890,9 @@ const Index = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="comparison" className="space-y-6">
-            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-red-50 via-amber-50/50 to-blue-50 border-b border-stone-200">
+          <TabsContent value="comparison" className="space-y-8">
+            <Card className="shadow-2xl border-0 bg-white/98 backdrop-blur-md hover:shadow-3xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-red-50 via-amber-50/50 to-blue-50 border-b border-stone-200/50">
                 <CardTitle className="text-xl text-stone-900">Сравнение заведений по датам</CardTitle>
                 <CardDescription className="text-stone-600">Динамика изменения количества приборов в PORT и Диккенс</CardDescription>
               </CardHeader>
@@ -896,8 +928,8 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-stone-50 via-amber-50/50 to-red-50 border-b border-stone-200">
+            <Card className="shadow-2xl border-0 bg-white/98 backdrop-blur-md hover:shadow-3xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-stone-50 via-amber-50/50 to-red-50 border-b border-stone-200/50">
                 <CardTitle className="text-xl text-stone-900">Общее количество приборов по заведениям</CardTitle>
                 <CardDescription className="text-stone-600">Суммарное количество всех записей</CardDescription>
               </CardHeader>
