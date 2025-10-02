@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import * as XLSX from 'xlsx';
 
 interface InventoryEntry {
   id: number;
@@ -307,6 +308,51 @@ const Index = () => {
     toast.success('Отчет обоих заведений экспортирован');
   };
 
+  const exportToExcel = () => {
+    const portData = portEntries.map(e => ({
+      'Дата': e.date,
+      'Заведение': 'PORT',
+      'Вилки': e.forks,
+      'Ножи': e.knives,
+      'Стейковые ножи': e.steak_knives,
+      'Ложки': e.spoons,
+      'Десертные ложки': e.dessert_spoons,
+      'Кулер под лед': e.ice_cooler,
+      'Тарелки': e.plates,
+      'Щипцы (сахар)': e.sugar_tongs,
+      'Щипцы (лед)': e.ice_tongs,
+    }));
+
+    const dickensData = dickensEntries.map(e => ({
+      'Дата': e.date,
+      'Заведение': 'Диккенс',
+      'Вилки': e.forks,
+      'Ножи': e.knives,
+      'Стейковые ножи': e.steak_knives,
+      'Ложки': e.spoons,
+      'Десертные ложки': e.dessert_spoons,
+      'Кулер под лед': e.ice_cooler,
+      'Тарелки': e.plates,
+      'Щипцы (сахар)': e.sugar_tongs,
+      'Щипцы (лед)': e.ice_tongs,
+    }));
+
+    const allData = [...portData, ...dickensData].sort((a, b) => b['Дата'].localeCompare(a['Дата']));
+
+    const ws = XLSX.utils.json_to_sheet(allData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Инвентаризация');
+
+    const colWidths = [
+      { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, 
+      { wch: 10 }, { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 12 }
+    ];
+    ws['!cols'] = colWidths;
+
+    XLSX.writeFile(wb, `Инвентаризация_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success('Excel-файл создан успешно');
+  };
+
   const getChartData = () => {
     return [...entries]
       .reverse()
@@ -374,8 +420,8 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-red-50/20">
-      <header className="border-b bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50">
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100/50 to-stone-50">
+      <header className="border-b border-stone-200/50 bg-white/98 backdrop-blur-xl shadow-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
@@ -391,37 +437,32 @@ const Index = () => {
             </div>
             
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex bg-stone-100 rounded-2xl p-1.5 shadow-sm border border-stone-200">
+              <div className="flex bg-gradient-to-r from-stone-100 to-stone-50 rounded-2xl p-2 shadow-md border border-stone-200">
                 <button
                   onClick={() => setCurrentVenue('PORT')}
-                  className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                  className={`px-7 py-3 rounded-xl font-bold transition-all duration-300 transform ${
                     currentVenue === 'PORT'
-                      ? 'bg-red-600 text-white shadow-md shadow-red-200'
-                      : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
+                      ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-300/50 scale-105'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-white/70 hover:scale-105'
                   }`}
                 >
                   PORT
                 </button>
                 <button
                   onClick={() => setCurrentVenue('Диккенс')}
-                  className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                  className={`px-7 py-3 rounded-xl font-bold transition-all duration-300 transform ${
                     currentVenue === 'Диккенс'
-                      ? 'bg-blue-900 text-white shadow-md shadow-blue-300'
-                      : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
+                      ? 'bg-gradient-to-r from-blue-900 to-blue-950 text-white shadow-lg shadow-blue-400/50 scale-105'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-white/70 hover:scale-105'
                   }`}
                 >
                   Диккенс
                 </button>
               </div>
 
-              <Button onClick={exportToCSV} variant="outline" className="shadow-sm border-stone-300 hover:bg-stone-50">
-                <Icon name="Download" size={16} className="mr-2" />
-                Экспорт {currentVenue}
-              </Button>
-
-              <Button onClick={exportBothVenuesToCSV} className={`shadow-md ${colors.primary}`}>
-                <Icon name="FileSpreadsheet" size={16} className="mr-2" />
-                Экспорт всех
+              <Button onClick={exportToExcel} className={`shadow-lg ${colors.primary} font-bold px-6 py-3 text-base hover:scale-105 transition-transform`}>
+                <Icon name="FileSpreadsheet" size={18} className="mr-2" />
+                Выгрузить Excel
               </Button>
             </div>
           </div>
@@ -429,30 +470,32 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="inventory" className="space-y-6">
-          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-3 bg-white border border-stone-200 p-2 rounded-2xl shadow-lg">
-            <TabsTrigger value="inventory" className={`rounded-xl data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200`}>
-              <Icon name="Table" size={18} className="mr-2" />
+        <Tabs defaultValue="inventory" className="space-y-8">
+          <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-3 bg-gradient-to-r from-white via-stone-50 to-white border-2 border-stone-200 p-2.5 rounded-3xl shadow-2xl">
+            <TabsTrigger value="inventory" className={`rounded-2xl font-bold text-base py-3.5 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 hover:scale-105`}>
+              <Icon name="Table" size={20} className="mr-2" />
               Инвентаризация
             </TabsTrigger>
-            <TabsTrigger value="stats" className={`rounded-xl data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200`}>
-              <Icon name="BarChart3" size={18} className="mr-2" />
+            <TabsTrigger value="stats" className={`rounded-2xl font-bold text-base py-3.5 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 hover:scale-105`}>
+              <Icon name="BarChart3" size={20} className="mr-2" />
               Статистика
             </TabsTrigger>
-            <TabsTrigger value="comparison" className={`rounded-xl data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200`}>
-              <Icon name="TrendingUp" size={18} className="mr-2" />
+            <TabsTrigger value="comparison" className={`rounded-2xl font-bold text-base py-3.5 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 hover:scale-105`}>
+              <Icon name="TrendingUp" size={20} className="mr-2" />
               Сравнение
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="inventory" className="space-y-6">
-            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm">
-              <CardHeader className={`bg-gradient-to-r ${colors.accent} rounded-t-xl`}>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon name="Plus" size={20} />
+          <TabsContent value="inventory" className="space-y-8">
+            <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
+              <CardHeader className={`bg-gradient-to-r ${colors.accent} border-b-2 border-stone-200`}>
+                <CardTitle className="flex items-center gap-3 text-xl font-bold text-stone-900">
+                  <div className={`p-2.5 rounded-xl ${colors.primary}`}>
+                    <Icon name="Plus" size={22} className="text-white" />
+                  </div>
                   Добавить запись для {currentVenue}
                 </CardTitle>
-                <CardDescription>Введите количество приборов на текущую дату</CardDescription>
+                <CardDescription className="text-stone-600 font-medium">Введите количество приборов на текущую дату</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -576,23 +619,25 @@ const Index = () => {
                   </div>
                 </div>
 
-                <div className="mt-6">
-                  <Button onClick={handleSubmit} className={`w-full md:w-auto shadow-lg ${colors.primary}`}>
-                    <Icon name="Check" size={16} className="mr-2" />
+                <div className="mt-8">
+                  <Button onClick={handleSubmit} className={`w-full md:w-auto shadow-xl ${colors.primary} font-bold text-base py-6 px-8 hover:scale-105 transition-transform`}>
+                    <Icon name="Check" size={20} className="mr-2" />
                     Добавить запись
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Icon name="Table" size={20} />
+            <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="border-b-2 border-stone-200 bg-gradient-to-r from-stone-50 to-white">
+                <CardTitle className="flex items-center justify-between flex-wrap gap-4">
+                  <span className="flex items-center gap-3 text-xl font-bold text-stone-900">
+                    <div className={`p-2.5 rounded-xl ${colors.primary}`}>
+                      <Icon name="Table" size={22} className="text-white" />
+                    </div>
                     История инвентаризации - {currentVenue}
                   </span>
-                  <Badge variant="secondary" className="shadow-sm">{entries.length} записей</Badge>
+                  <Badge className={`${colors.primary} text-white shadow-md text-base px-4 py-2 font-bold`}>{entries.length} записей</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -692,37 +737,44 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent className="pt-8 pb-6">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
                   {[
-                    { label: 'Вилки', key: 'forks' as const, icon: 'Utensils' },
-                    { label: 'Ножи', key: 'knives' as const, icon: 'Slice' },
-                    { label: 'Стейк. ножи', key: 'steak_knives' as const, icon: 'ChefHat' },
-                    { label: 'Ложки', key: 'spoons' as const, icon: 'Soup' },
-                    { label: 'Тарелки', key: 'plates' as const, icon: 'Circle' },
-                  ].map(({ label, key, icon }) => {
+                    { label: 'Вилки', key: 'forks' as const, icon: 'Utensils', color: 'from-red-500 to-red-600' },
+                    { label: 'Ножи', key: 'knives' as const, icon: 'Slice', color: 'from-stone-500 to-stone-600' },
+                    { label: 'Стейк. ножи', key: 'steak_knives' as const, icon: 'ChefHat', color: 'from-amber-600 to-amber-700' },
+                    { label: 'Ложки', key: 'spoons' as const, icon: 'Soup', color: 'from-neutral-600 to-neutral-700' },
+                    { label: 'Дес. ложки', key: 'dessert_spoons' as const, icon: 'Coffee', color: 'from-orange-500 to-orange-600' },
+                    { label: 'Кулер', key: 'ice_cooler' as const, icon: 'Box', color: 'from-cyan-500 to-cyan-600' },
+                    { label: 'Тарелки', key: 'plates' as const, icon: 'Circle', color: 'from-red-600 to-red-700' },
+                    { label: 'Щипцы (сахар)', key: 'sugar_tongs' as const, icon: 'Wrench', color: 'from-pink-500 to-pink-600' },
+                    { label: 'Щипцы (лед)', key: 'ice_tongs' as const, icon: 'Grip', color: 'from-blue-500 to-blue-600' },
+                  ].map(({ label, key, icon, color }) => {
                     const data = getDataForDateRange(key);
                     return (
-                      <Card key={key} className="shadow-lg border border-stone-200 bg-gradient-to-br from-white to-stone-50/50 overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                        <div className={`h-2 ${colors.primary}`} />
-                        <CardHeader className="pb-3 pt-4">
+                      <Card key={key} className="group relative shadow-xl border-0 bg-white overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+                        <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                        <div className={`h-1 bg-gradient-to-r ${color}`} />
+                        <CardHeader className="pb-2 pt-4 relative">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm font-semibold text-stone-600">{label}</CardTitle>
-                            <Icon name={icon as any} size={18} className="text-stone-400" />
+                            <CardTitle className="text-sm font-bold text-stone-700">{label}</CardTitle>
+                            <div className={`p-2 rounded-xl bg-gradient-to-br ${color} opacity-20`}>
+                              <Icon name={icon as any} size={16} className="text-stone-700" />
+                            </div>
                           </div>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className={`text-5xl font-bold ${colors.text}`}>
+                        <CardContent className="space-y-3 relative">
+                          <div className="text-5xl font-black text-stone-900 tracking-tight">
                             {data.total}
                           </div>
-                          <p className="text-xs text-stone-500 font-medium">Итого за период</p>
-                          <div className="pt-3 border-t border-stone-200 space-y-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-stone-600">PORT:</span>
-                              <Badge variant="secondary" className="bg-red-100 text-red-700 hover:bg-red-200 font-semibold">{data.port}</Badge>
+                          <p className="text-xs text-stone-500 font-semibold uppercase tracking-wide">Итого за период</p>
+                          <div className="pt-3 mt-2 border-t border-stone-200 space-y-2">
+                            <div className="flex justify-between items-center bg-red-50 px-2 py-1.5 rounded-lg">
+                              <span className="text-xs font-semibold text-red-800">PORT:</span>
+                              <Badge className="bg-red-600 hover:bg-red-700 text-white font-bold shadow-sm">{data.port}</Badge>
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-stone-600">Диккенс:</span>
-                              <Badge variant="secondary" className="bg-blue-100 text-blue-900 hover:bg-blue-200 font-semibold">{data.dickens}</Badge>
+                            <div className="flex justify-between items-center bg-blue-50 px-2 py-1.5 rounded-lg">
+                              <span className="text-xs font-semibold text-blue-900">Диккенс:</span>
+                              <Badge className="bg-blue-900 hover:bg-blue-950 text-white font-bold shadow-sm">{data.dickens}</Badge>
                             </div>
                           </div>
                         </CardContent>
