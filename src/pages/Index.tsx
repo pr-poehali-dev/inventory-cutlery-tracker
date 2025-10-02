@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -502,14 +503,24 @@ const Index = () => {
                 </button>
               </div>
 
-              <Button 
-                onClick={exportToExcel} 
-                className={`shadow-lg ${colors.primary} font-bold px-6 py-3 text-base hover:scale-105 transition-transform relative overflow-hidden group`}
-              >
-                <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-                <Icon name="FileSpreadsheet" size={18} className="mr-2 relative z-10" />
-                <span className="relative z-10">Скачать Excel</span>
-              </Button>
+              <div className="flex gap-3">
+                <Button 
+                  onClick={() => window.location.href = '/history'} 
+                  className={`shadow-lg ${colors.primary} font-bold px-6 py-3 text-base hover:scale-105 transition-transform relative overflow-hidden group`}
+                >
+                  <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                  <Icon name="History" size={18} className="mr-2 relative z-10" />
+                  <span className="relative z-10">История</span>
+                </Button>
+                <Button 
+                  onClick={exportToExcel} 
+                  className={`shadow-lg ${colors.primary} font-bold px-6 py-3 text-base hover:scale-105 transition-transform relative overflow-hidden group`}
+                >
+                  <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                  <Icon name="FileSpreadsheet" size={18} className="mr-2 relative z-10" />
+                  <span className="relative z-10">Скачать Excel</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -525,10 +536,6 @@ const Index = () => {
             <TabsTrigger value="stats" className={`rounded-2xl font-bold text-base py-3.5 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 hover:scale-105`}>
               <Icon name="BarChart3" size={20} className="mr-2" />
               Статистика
-            </TabsTrigger>
-            <TabsTrigger value="comparison" className={`rounded-2xl font-bold text-base py-3.5 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 hover:scale-105`}>
-              <Icon name="TrendingUp" size={20} className="mr-2" />
-              Сравнение
             </TabsTrigger>
             <TabsTrigger value="comparison" className={`rounded-2xl font-bold text-base py-3.5 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 hover:scale-105`}>
               <Icon name="TrendingUp" size={20} className="mr-2" />
