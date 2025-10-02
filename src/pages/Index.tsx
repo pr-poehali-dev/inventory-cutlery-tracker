@@ -81,8 +81,8 @@ const Index = () => {
     plates: '',
     sugarTongs: '',
     iceTongs: '',
-    responsibleName: '',
-    responsibleDate: new Date().toISOString().split('T')[0],
+    responsible_name: '',
+    responsible_date: new Date().toISOString().split('T')[0],
   });
 
   const colors = currentVenue === 'PORT' ? portColors : dickensColors;
@@ -172,8 +172,8 @@ const Index = () => {
           plates: '',
           sugarTongs: '',
           iceTongs: '',
-          responsibleName: '',
-          responsibleDate: new Date().toISOString().split('T')[0],
+          responsible_name: '',
+          responsible_date: new Date().toISOString().split('T')[0],
         });
         await loadAllData();
         toast.success('Запись добавлена успешно');
