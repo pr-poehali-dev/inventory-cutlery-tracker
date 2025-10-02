@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Get PORT inventory entries",
+      "method": "GET",
+      "path": "/?venue=PORT",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Get Диккенс inventory entries",
+      "method": "GET",
+      "path": "/?venue=Диккенс",
+      "expectedStatus": 200
+    }
+  ]
+}

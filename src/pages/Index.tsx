@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,50 +8,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface InventoryEntry {
-  id: string;
+  id: number;
+  venue: string;
   date: string;
   forks: number;
   knives: number;
-  steakKnives: number;
+  steak_knives: number;
   spoons: number;
-  dessertSpoons: number;
-  iceCooler: number;
+  dessert_spoons: number;
+  ice_cooler: number;
   plates: number;
-  sugarTongs: number;
-  iceTongs: number;
+  sugar_tongs: number;
+  ice_tongs: number;
+  created_at?: string;
 }
 
+const API_URL = 'https://functions.poehali.dev/d7f59bfc-56d2-4795-a257-4b6fb9f4652c';
+
 const Index = () => {
-  const [entries, setEntries] = useState<InventoryEntry[]>([
-    {
-      id: '1',
-      date: '2025-10-01',
-      forks: 120,
-      knives: 110,
-      steakKnives: 48,
-      spoons: 115,
-      dessertSpoons: 95,
-      iceCooler: 3,
-      plates: 140,
-      sugarTongs: 6,
-      iceTongs: 4,
-    },
-    {
-      id: '2',
-      date: '2025-10-02',
-      forks: 118,
-      knives: 108,
-      steakKnives: 47,
-      spoons: 112,
-      dessertSpoons: 93,
-      iceCooler: 3,
-      plates: 138,
-      sugarTongs: 6,
-      iceTongs: 4,
-    },
-  ]);
+  const [currentVenue, setCurrentVenue] = useState<'PORT' | 'Диккенс'>('PORT');
+  const [entries, setEntries] = useState<InventoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -66,47 +46,75 @@ const Index = () => {
     iceTongs: '',
   });
 
+  useEffect(() => {
+    loadEntries();
+  }, [currentVenue]);
+
+  const loadEntries = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}?venue=${encodeURIComponent(currentVenue)}`);
+      const data = await response.json();
+      setEntries(data.entries || []);
+    } catch (error) {
+      toast.error('Ошибка загрузки данных');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleSubmit = () => {
-    const newEntry: InventoryEntry = {
-      id: Date.now().toString(),
-      date: formData.date,
-      forks: Number(formData.forks) || 0,
-      knives: Number(formData.knives) || 0,
-      steakKnives: Number(formData.steakKnives) || 0,
-      spoons: Number(formData.spoons) || 0,
-      dessertSpoons: Number(formData.dessertSpoons) || 0,
-      iceCooler: Number(formData.iceCooler) || 0,
-      plates: Number(formData.plates) || 0,
-      sugarTongs: Number(formData.sugarTongs) || 0,
-      iceTongs: Number(formData.iceTongs) || 0,
-    };
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          venue: currentVenue,
+          date: formData.date,
+          forks: Number(formData.forks) || 0,
+          knives: Number(formData.knives) || 0,
+          steakKnives: Number(formData.steakKnives) || 0,
+          spoons: Number(formData.spoons) || 0,
+          dessertSpoons: Number(formData.dessertSpoons) || 0,
+          iceCooler: Number(formData.iceCooler) || 0,
+          plates: Number(formData.plates) || 0,
+          sugarTongs: Number(formData.sugarTongs) || 0,
+          iceTongs: Number(formData.iceTongs) || 0,
+        }),
+      });
 
-    setEntries([newEntry, ...entries]);
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      forks: '',
-      knives: '',
-      steakKnives: '',
-      spoons: '',
-      dessertSpoons: '',
-      iceCooler: '',
-      plates: '',
-      sugarTongs: '',
-      iceTongs: '',
-    });
-
-    toast.success('Запись добавлена успешно');
+      if (response.ok) {
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          forks: '',
+          knives: '',
+          steakKnives: '',
+          spoons: '',
+          dessertSpoons: '',
+          iceCooler: '',
+          plates: '',
+          sugarTongs: '',
+          iceTongs: '',
+        });
+        await loadEntries();
+        toast.success('Запись добавлена успешно');
+      }
+    } catch (error) {
+      toast.error('Ошибка при добавлении записи');
+      console.error(error);
+    }
   };
 
-  const calculateTotal = (key: keyof Omit<InventoryEntry, 'id' | 'date'>) => {
+  const calculateTotal = (key: keyof Omit<InventoryEntry, 'id' | 'date' | 'venue' | 'created_at'>) => {
     return entries.reduce((sum, entry) => sum + entry[key], 0);
   };
 
-  const calculateAverage = (key: keyof Omit<InventoryEntry, 'id' | 'date'>) => {
+  const calculateAverage = (key: keyof Omit<InventoryEntry, 'id' | 'date' | 'venue' | 'created_at'>) => {
     if (entries.length === 0) return 0;
     return Math.round(calculateTotal(key) / entries.length);
   };
@@ -117,40 +125,79 @@ const Index = () => {
       e.date,
       e.forks,
       e.knives,
-      e.steakKnives,
+      e.steak_knives,
       e.spoons,
-      e.dessertSpoons,
-      e.iceCooler,
+      e.dessert_spoons,
+      e.ice_cooler,
       e.plates,
-      e.sugarTongs,
-      e.iceTongs,
+      e.sugar_tongs,
+      e.ice_tongs,
     ]);
 
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `inventory_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `inventory_${currentVenue}_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
 
     toast.success('Отчет экспортирован');
+  };
+
+  const getChartData = () => {
+    return [...entries]
+      .reverse()
+      .map(entry => ({
+        date: entry.date,
+        Вилки: entry.forks,
+        Ножи: entry.knives,
+        'Стейк. ножи': entry.steak_knives,
+        Ложки: entry.spoons,
+        Тарелки: entry.plates,
+      }));
   };
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
                 <Icon name="Utensils" className="text-primary-foreground" size={20} />
               </div>
-              <h1 className="text-2xl font-semibold">Система инвентаризации приборов</h1>
+              <h1 className="text-2xl font-semibold">Система инвентаризации</h1>
             </div>
-            <Button onClick={exportToCSV} variant="outline">
-              <Icon name="Download" size={16} className="mr-2" />
-              Экспорт
-            </Button>
+            
+            <div className="flex items-center gap-3">
+              <div className="flex bg-secondary rounded-lg p-1">
+                <button
+                  onClick={() => setCurrentVenue('PORT')}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    currentVenue === 'PORT'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  PORT
+                </button>
+                <button
+                  onClick={() => setCurrentVenue('Диккенс')}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    currentVenue === 'Диккенс'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Диккенс
+                </button>
+              </div>
+
+              <Button onClick={exportToCSV} variant="outline">
+                <Icon name="Download" size={16} className="mr-2" />
+                Экспорт
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -177,7 +224,7 @@ const Index = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Icon name="Plus" size={20} />
-                  Добавить запись
+                  Добавить запись для {currentVenue}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -306,51 +353,83 @@ const Index = () => {
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <Icon name="Table" size={20} />
-                    История инвентаризации
+                    История инвентаризации - {currentVenue}
                   </span>
                   <Badge variant="secondary">{entries.length} записей</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Дата</TableHead>
-                        <TableHead className="text-right">Вилки</TableHead>
-                        <TableHead className="text-right">Ножи</TableHead>
-                        <TableHead className="text-right">Стейк. ножи</TableHead>
-                        <TableHead className="text-right">Ложки</TableHead>
-                        <TableHead className="text-right">Дес. ложки</TableHead>
-                        <TableHead className="text-right">Кулер</TableHead>
-                        <TableHead className="text-right">Тарелки</TableHead>
-                        <TableHead className="text-right">Щ. сахар</TableHead>
-                        <TableHead className="text-right">Щ. лед</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {entries.map((entry) => (
-                        <TableRow key={entry.id}>
-                          <TableCell className="font-medium">{entry.date}</TableCell>
-                          <TableCell className="text-right">{entry.forks}</TableCell>
-                          <TableCell className="text-right">{entry.knives}</TableCell>
-                          <TableCell className="text-right">{entry.steakKnives}</TableCell>
-                          <TableCell className="text-right">{entry.spoons}</TableCell>
-                          <TableCell className="text-right">{entry.dessertSpoons}</TableCell>
-                          <TableCell className="text-right">{entry.iceCooler}</TableCell>
-                          <TableCell className="text-right">{entry.plates}</TableCell>
-                          <TableCell className="text-right">{entry.sugarTongs}</TableCell>
-                          <TableCell className="text-right">{entry.iceTongs}</TableCell>
+                {loading ? (
+                  <div className="text-center py-8 text-muted-foreground">Загрузка...</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Дата</TableHead>
+                          <TableHead className="text-right">Вилки</TableHead>
+                          <TableHead className="text-right">Ножи</TableHead>
+                          <TableHead className="text-right">Стейк. ножи</TableHead>
+                          <TableHead className="text-right">Ложки</TableHead>
+                          <TableHead className="text-right">Дес. ложки</TableHead>
+                          <TableHead className="text-right">Кулер</TableHead>
+                          <TableHead className="text-right">Тарелки</TableHead>
+                          <TableHead className="text-right">Щ. сахар</TableHead>
+                          <TableHead className="text-right">Щ. лед</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {entries.map((entry) => (
+                          <TableRow key={entry.id}>
+                            <TableCell className="font-medium">{entry.date}</TableCell>
+                            <TableCell className="text-right">{entry.forks}</TableCell>
+                            <TableCell className="text-right">{entry.knives}</TableCell>
+                            <TableCell className="text-right">{entry.steak_knives}</TableCell>
+                            <TableCell className="text-right">{entry.spoons}</TableCell>
+                            <TableCell className="text-right">{entry.dessert_spoons}</TableCell>
+                            <TableCell className="text-right">{entry.ice_cooler}</TableCell>
+                            <TableCell className="text-right">{entry.plates}</TableCell>
+                            <TableCell className="text-right">{entry.sugar_tongs}</TableCell>
+                            <TableCell className="text-right">{entry.ice_tongs}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="stats" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>График изменения количества приборов - {currentVenue}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {entries.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <LineChart data={getChartData()}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="Вилки" stroke="#2563eb" strokeWidth={2} />
+                      <Line type="monotone" dataKey="Ножи" stroke="#10b981" strokeWidth={2} />
+                      <Line type="monotone" dataKey="Стейк. ножи" stroke="#f59e0b" strokeWidth={2} />
+                      <Line type="monotone" dataKey="Ложки" stroke="#8b5cf6" strokeWidth={2} />
+                      <Line type="monotone" dataKey="Тарелки" stroke="#ef4444" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    Нет данных для отображения графика
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <Card>
                 <CardHeader className="pb-3">
@@ -395,16 +474,16 @@ const Index = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Стейковые ножи</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{calculateAverage('steakKnives')}</div>
+                  <div className="text-2xl font-bold">{calculateAverage('steak_knives')}</div>
                   <p className="text-xs text-muted-foreground mt-1">Среднее значение</p>
                   <div className="mt-2 flex items-center gap-2">
                     <div className="flex-1 bg-secondary rounded-full h-2">
                       <div
                         className="bg-primary h-2 rounded-full transition-all"
-                        style={{ width: `${(calculateAverage('steakKnives') / 100) * 100}%` }}
+                        style={{ width: `${(calculateAverage('steak_knives') / 100) * 100}%` }}
                       />
                     </div>
-                    <span className="text-xs text-muted-foreground">{calculateTotal('steakKnives')}</span>
+                    <span className="text-xs text-muted-foreground">{calculateTotal('steak_knives')}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -455,10 +534,10 @@ const Index = () => {
               <CardContent>
                 <div className="space-y-4">
                   {[
-                    { label: 'Десертные ложки', key: 'dessertSpoons' as const },
-                    { label: 'Кулер под лед', key: 'iceCooler' as const },
-                    { label: 'Щипцы под сахар', key: 'sugarTongs' as const },
-                    { label: 'Щипцы под лед', key: 'iceTongs' as const },
+                    { label: 'Десертные ложки', key: 'dessert_spoons' as const },
+                    { label: 'Кулер под лед', key: 'ice_cooler' as const },
+                    { label: 'Щипцы под сахар', key: 'sugar_tongs' as const },
+                    { label: 'Щипцы под лед', key: 'ice_tongs' as const },
                   ].map(({ label, key }) => (
                     <div key={key} className="flex items-center justify-between">
                       <span className="text-sm font-medium">{label}</span>
@@ -483,7 +562,7 @@ const Index = () => {
           <TabsContent value="reports" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Экспорт отчетов</CardTitle>
+                <CardTitle>Экспорт отчетов - {currentVenue}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-4 p-4 border rounded-lg">
@@ -536,7 +615,7 @@ const Index = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Сводка данных</CardTitle>
+                <CardTitle>Сводка данных - {currentVenue}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
