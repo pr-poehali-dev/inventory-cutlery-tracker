@@ -22,7 +22,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Max-Age': '86400'
             },
@@ -102,6 +102,63 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Access-Control-Allow-Origin': '*'
                 },
                 'body': json.dumps({'entry': dict(new_entry)}),
+                'isBase64Encoded': False
+            }
+        
+        elif method == 'PUT':
+            body_data = json.loads(event.get('body', '{}'))
+            entry_id = body_data.get('id')
+            
+            if not entry_id:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps({'error': 'ID is required'}),
+                    'isBase64Encoded': False
+                }
+            
+            conn = get_db_connection()
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            cur.execute('''
+                UPDATE t_p23128842_inventory_cutlery_tr.inventory_entries
+                SET venue = %s, entry_date = %s, forks = %s, knives = %s, 
+                    steak_knives = %s, spoons = %s, dessert_spoons = %s, 
+                    ice_cooler = %s, plates = %s, sugar_tongs = %s, ice_tongs = %s
+                WHERE id = %s
+                RETURNING id, venue, entry_date::text as date, 
+                          forks, knives, steak_knives, spoons, dessert_spoons,
+                          ice_cooler, plates, sugar_tongs, ice_tongs
+            ''', (
+                body_data['venue'],
+                body_data['date'],
+                body_data['forks'],
+                body_data['knives'],
+                body_data['steakKnives'],
+                body_data['spoons'],
+                body_data['dessertSpoons'],
+                body_data['iceCooler'],
+                body_data['plates'],
+                body_data['sugarTongs'],
+                body_data['iceTongs'],
+                entry_id
+            ))
+            
+            updated_entry = cur.fetchone()
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'entry': dict(updated_entry) if updated_entry else None}),
                 'isBase64Encoded': False
             }
         
