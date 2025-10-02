@@ -34,6 +34,7 @@ const Index = () => {
   const [portEntries, setPortEntries] = useState<InventoryEntry[]>([]);
   const [dickensEntries, setDickensEntries] = useState<InventoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<string>('');
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -148,6 +149,39 @@ const Index = () => {
     return portTotal + dickensTotal;
   };
 
+  const getAvailableDates = () => {
+    const allDates = new Set<string>();
+    portEntries.forEach(e => allDates.add(e.date));
+    dickensEntries.forEach(e => allDates.add(e.date));
+    return Array.from(allDates).sort().reverse();
+  };
+
+  const getDataForDate = (date: string, key: keyof Omit<InventoryEntry, 'id' | 'date' | 'venue' | 'created_at'>) => {
+    const portEntry = portEntries.find(e => e.date === date);
+    const dickensEntry = dickensEntries.find(e => e.date === date);
+    const portValue = portEntry ? portEntry[key] : 0;
+    const dickensValue = dickensEntry ? dickensEntry[key] : 0;
+    return { port: portValue, dickens: dickensValue, total: portValue + dickensValue };
+  };
+
+  const exportBothVenuesToCSV = () => {
+    const headers = ['Дата', 'Заведение', 'Вилки', 'Ножи', 'Стейковые ножи', 'Ложки', 'Десертные ложки', 'Кулер', 'Тарелки', 'Щипцы (сахар)', 'Щипцы (лед)'];
+    const portRows = portEntries.map(e => [
+      e.date, 'PORT', e.forks, e.knives, e.steak_knives, e.spoons, e.dessert_spoons, e.ice_cooler, e.plates, e.sugar_tongs, e.ice_tongs
+    ]);
+    const dickensRows = dickensEntries.map(e => [
+      e.date, 'Диккенс', e.forks, e.knives, e.steak_knives, e.spoons, e.dessert_spoons, e.ice_cooler, e.plates, e.sugar_tongs, e.ice_tongs
+    ]);
+    const allRows = [...portRows, ...dickensRows].sort((a, b) => (b[0] as string).localeCompare(a[0] as string));
+    const csv = [headers, ...allRows].map(row => row.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `inventory_both_venues_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    toast.success('Отчет обоих заведений экспортирован');
+  };
+
   const exportToCSV = () => {
     const headers = ['Дата', 'Вилки', 'Ножи', 'Стейковые ножи', 'Ложки', 'Десертные ложки', 'Кулер', 'Тарелки', 'Щипцы (сахар)', 'Щипцы (лед)'];
     const rows = entries.map(e => [
@@ -239,50 +273,62 @@ const Index = () => {
     ];
   };
 
+  useEffect(() => {
+    const dates = getAvailableDates();
+    if (dates.length > 0 && !selectedDate) {
+      setSelectedDate(dates[0]);
+    }
+  }, [portEntries, dickensEntries]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/30">
-      <header className="border-b bg-card/80 backdrop-blur-sm shadow-sm">
-        <div className="container mx-auto px-4 py-5">
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-red-50/20">
+      <header className="border-b bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
-                <Icon name="Utensils" className="text-primary-foreground" size={22} />
+              <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg">
+                <Icon name="Utensils" className="text-white" size={24} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold text-stone-900">
                   Система инвентаризации
                 </h1>
-                <p className="text-sm text-muted-foreground">Учет приборов и посуды</p>
+                <p className="text-sm text-stone-600">Учет приборов и посуды</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              <div className="flex bg-secondary/50 rounded-xl p-1.5 shadow-sm border">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex bg-stone-100 rounded-2xl p-1.5 shadow-sm border border-stone-200">
                 <button
                   onClick={() => setCurrentVenue('PORT')}
-                  className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
+                  className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-200 ${
                     currentVenue === 'PORT'
-                      ? 'bg-primary text-primary-foreground shadow-md scale-105'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80'
+                      ? 'bg-red-600 text-white shadow-md shadow-red-200'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
                   }`}
                 >
                   PORT
                 </button>
                 <button
                   onClick={() => setCurrentVenue('Диккенс')}
-                  className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
+                  className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-200 ${
                     currentVenue === 'Диккенс'
-                      ? 'bg-primary text-primary-foreground shadow-md scale-105'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80'
+                      ? 'bg-red-600 text-white shadow-md shadow-red-200'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
                   }`}
                 >
                   Диккенс
                 </button>
               </div>
 
-              <Button onClick={exportToCSV} variant="outline" className="shadow-sm">
+              <Button onClick={exportToCSV} variant="outline" className="shadow-sm border-stone-300 hover:bg-stone-50">
                 <Icon name="Download" size={16} className="mr-2" />
-                Экспорт
+                Экспорт {currentVenue}
+              </Button>
+
+              <Button onClick={exportBothVenuesToCSV} className="shadow-md bg-red-600 hover:bg-red-700">
+                <Icon name="FileSpreadsheet" size={16} className="mr-2" />
+                Экспорт всех
               </Button>
             </div>
           </div>
@@ -291,21 +337,21 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="inventory" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4 bg-secondary/50 p-1.5 rounded-xl shadow-sm">
-            <TabsTrigger value="inventory" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-md">
-              <Icon name="Table" size={16} className="mr-2" />
+          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-4 bg-white border border-stone-200 p-2 rounded-2xl shadow-lg">
+            <TabsTrigger value="inventory" className="rounded-xl data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200">
+              <Icon name="Table" size={18} className="mr-2" />
               Инвентаризация
             </TabsTrigger>
-            <TabsTrigger value="stats" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-md">
-              <Icon name="BarChart3" size={16} className="mr-2" />
+            <TabsTrigger value="stats" className="rounded-xl data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200">
+              <Icon name="BarChart3" size={18} className="mr-2" />
               Статистика
             </TabsTrigger>
-            <TabsTrigger value="comparison" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-md">
-              <Icon name="TrendingUp" size={16} className="mr-2" />
+            <TabsTrigger value="comparison" className="rounded-xl data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200">
+              <Icon name="TrendingUp" size={18} className="mr-2" />
               Сравнение
             </TabsTrigger>
-            <TabsTrigger value="reports" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-md">
-              <Icon name="FileText" size={16} className="mr-2" />
+            <TabsTrigger value="reports" className="rounded-xl data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200">
+              <Icon name="FileText" size={18} className="mr-2" />
               Отчеты
             </TabsTrigger>
           </TabsList>
@@ -504,51 +550,80 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="stats" className="space-y-6">
-            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-xl">
-                <CardTitle>Общая статистика по двум заведениям</CardTitle>
-                <CardDescription>Итоговое количество приборов PORT + Диккенс</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  {[
-                    { label: 'Вилки', key: 'forks' as const, color: 'from-red-500 to-red-600' },
-                    { label: 'Ножи', key: 'knives' as const, color: 'from-stone-500 to-stone-600' },
-                    { label: 'Стейк. ножи', key: 'steak_knives' as const, color: 'from-amber-600 to-amber-700' },
-                    { label: 'Ложки', key: 'spoons' as const, color: 'from-neutral-500 to-neutral-600' },
-                    { label: 'Тарелки', key: 'plates' as const, color: 'from-red-600 to-red-700' },
-                  ].map(({ label, key, color }) => (
-                    <Card key={key} className="shadow-lg border-0 bg-gradient-to-br from-white to-stone-50 overflow-hidden">
-                      <div className={`h-1.5 bg-gradient-to-r ${color}`} />
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-4xl font-bold text-foreground">
-                          {calculateTotalBothVenues(key)}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">Всего в обоих заведениях</p>
-                        <div className="mt-3 pt-3 border-t border-stone-200 text-xs text-muted-foreground">
-                          <div className="flex justify-between">
-                            <span>PORT:</span>
-                            <span className="font-semibold">{portEntries.reduce((sum, e) => sum + e[key], 0)}</span>
-                          </div>
-                          <div className="flex justify-between mt-1">
-                            <span>Диккенс:</span>
-                            <span className="font-semibold">{dickensEntries.reduce((sum, e) => sum + e[key], 0)}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-red-50 via-amber-50/50 to-stone-50 border-b border-stone-200">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <CardTitle className="text-xl text-stone-900">Общая статистика по двум заведениям</CardTitle>
+                    <CardDescription className="text-stone-600">Количество приборов PORT + Диккенс на выбранную дату</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Label htmlFor="date-select" className="text-sm font-medium text-stone-700">Выбрать дату:</Label>
+                    <select
+                      id="date-select"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="px-4 py-2 border border-stone-300 rounded-xl bg-white text-stone-900 font-medium shadow-sm hover:border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all"
+                    >
+                      {getAvailableDates().map(date => (
+                        <option key={date} value={date}>{date}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+              </CardHeader>
+              <CardContent className="pt-8 pb-6">
+                {selectedDate ? (
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
+                    {[
+                      { label: 'Вилки', key: 'forks' as const, color: 'from-red-500 to-red-600', icon: 'Utensils' },
+                      { label: 'Ножи', key: 'knives' as const, color: 'from-stone-500 to-stone-600', icon: 'Slice' },
+                      { label: 'Стейк. ножи', key: 'steak_knives' as const, color: 'from-amber-600 to-amber-700', icon: 'ChefHat' },
+                      { label: 'Ложки', key: 'spoons' as const, color: 'from-neutral-500 to-neutral-600', icon: 'Soup' },
+                      { label: 'Тарелки', key: 'plates' as const, color: 'from-red-600 to-red-700', icon: 'Circle' },
+                    ].map(({ label, key, color, icon }) => {
+                      const data = getDataForDate(selectedDate, key);
+                      return (
+                        <Card key={key} className="shadow-lg border border-stone-200 bg-gradient-to-br from-white to-stone-50/50 overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                          <div className={`h-2 bg-gradient-to-r ${color}`} />
+                          <CardHeader className="pb-3 pt-4">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-sm font-semibold text-stone-600">{label}</CardTitle>
+                              <Icon name={icon as any} size={18} className="text-stone-400" />
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="text-5xl font-bold text-stone-900">
+                              {data.total}
+                            </div>
+                            <p className="text-xs text-stone-500 font-medium">Итого на {selectedDate}</p>
+                            <div className="pt-3 border-t border-stone-200 space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs text-stone-600">PORT:</span>
+                                <Badge variant="secondary" className="bg-red-100 text-red-700 hover:bg-red-200 font-semibold">{data.port}</Badge>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs text-stone-600">Диккенс:</span>
+                                <Badge variant="secondary" className="bg-stone-200 text-stone-700 hover:bg-stone-300 font-semibold">{data.dickens}</Badge>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-stone-500">
+                    Нет данных для отображения. Добавьте записи инвентаризации.
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle>График изменения количества приборов - {currentVenue}</CardTitle>
-                <CardDescription>Динамика количества основных приборов по датам</CardDescription>
+            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+              <CardHeader className="border-b border-stone-100">
+                <CardTitle className="text-xl text-stone-900">График изменения количества приборов - {currentVenue}</CardTitle>
+                <CardDescription className="text-stone-600">Динамика количества основных приборов по датам</CardDescription>
               </CardHeader>
               <CardContent>
                 {entries.length > 0 ? (
@@ -581,7 +656,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
               {[
                 { label: 'Вилки', key: 'forks' as const, color: 'from-red-500 to-red-600' },
                 { label: 'Ножи', key: 'knives' as const, color: 'from-stone-500 to-stone-600' },
@@ -589,24 +664,24 @@ const Index = () => {
                 { label: 'Ложки', key: 'spoons' as const, color: 'from-neutral-500 to-neutral-600' },
                 { label: 'Тарелки', key: 'plates' as const, color: 'from-red-600 to-red-700' },
               ].map(({ label, key, color }) => (
-                <Card key={key} className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden">
-                  <div className={`h-1 bg-gradient-to-r ${color}`} />
+                <Card key={key} className="shadow-lg border border-stone-200 bg-white overflow-hidden hover:shadow-xl transition-all duration-300">
+                  <div className={`h-2 bg-gradient-to-r ${color}`} />
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+                    <CardTitle className="text-sm font-semibold text-stone-600">{label}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-foreground">
+                    <div className="text-4xl font-bold text-stone-900">
                       {calculateAverage(key)}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">Среднее {currentVenue}</p>
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="flex-1 bg-stone-200 rounded-full h-2 overflow-hidden">
+                    <p className="text-xs text-stone-500 mt-1 font-medium">Среднее {currentVenue}</p>
+                    <div className="mt-4 flex items-center gap-2">
+                      <div className="flex-1 bg-stone-200 rounded-full h-2.5 overflow-hidden">
                         <div
-                          className={`bg-gradient-to-r ${color} h-2 rounded-full transition-all duration-500`}
+                          className={`bg-gradient-to-r ${color} h-2.5 rounded-full transition-all duration-500`}
                           style={{ width: `${(calculateAverage(key) / 150) * 100}%` }}
                         />
                       </div>
-                      <span className="text-xs font-semibold text-muted-foreground">{calculateTotal(key)}</span>
+                      <span className="text-xs font-bold text-stone-700">{calculateTotal(key)}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -615,10 +690,10 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="comparison" className="space-y-6">
-            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-xl">
-                <CardTitle>Сравнение заведений по датам</CardTitle>
-                <CardDescription>Динамика изменения количества приборов в PORT и Диккенс</CardDescription>
+            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-red-50 via-amber-50/50 to-stone-50 border-b border-stone-200">
+                <CardTitle className="text-xl text-stone-900">Сравнение заведений по датам</CardTitle>
+                <CardDescription className="text-stone-600">Динамика изменения количества приборов в PORT и Диккенс</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 {portEntries.length > 0 || dickensEntries.length > 0 ? (
@@ -652,10 +727,10 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-accent/5 to-primary/5 rounded-t-xl">
-                <CardTitle>Общее количество приборов по заведениям</CardTitle>
-                <CardDescription>Суммарное количество всех записей</CardDescription>
+            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-stone-50 via-amber-50/50 to-red-50 border-b border-stone-200">
+                <CardTitle className="text-xl text-stone-900">Общее количество приборов по заведениям</CardTitle>
+                <CardDescription className="text-stone-600">Суммарное количество всех записей</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={400}>
@@ -680,45 +755,45 @@ const Index = () => {
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="shadow-lg border-0 bg-gradient-to-br from-red-50 to-red-100/50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-red-900">
-                    <Icon name="Store" size={20} />
+              <Card className="shadow-xl border border-red-200 bg-gradient-to-br from-red-50 to-white">
+                <CardHeader className="border-b border-red-100">
+                  <CardTitle className="flex items-center gap-2 text-red-900 text-lg">
+                    <Icon name="Store" size={22} />
                     PORT - Итого
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="pt-4 space-y-3">
                   {[
                     { label: 'Всего вилок', value: portEntries.reduce((sum, e) => sum + e.forks, 0) },
                     { label: 'Всего ножей', value: portEntries.reduce((sum, e) => sum + e.knives, 0) },
                     { label: 'Всего ложек', value: portEntries.reduce((sum, e) => sum + e.spoons, 0) },
                     { label: 'Всего тарелок', value: portEntries.reduce((sum, e) => sum + e.plates, 0) },
                   ].map((item, i) => (
-                    <div key={i} className="flex justify-between items-center py-2 border-b border-red-200/50 last:border-0">
-                      <span className="text-sm font-medium text-red-900">{item.label}</span>
-                      <Badge className="bg-red-600 hover:bg-red-700 shadow-sm">{item.value}</Badge>
+                    <div key={i} className="flex justify-between items-center py-3 px-2 border-b border-red-100 last:border-0 hover:bg-red-50/50 rounded transition-colors">
+                      <span className="text-sm font-semibold text-red-900">{item.label}</span>
+                      <Badge className="bg-red-600 hover:bg-red-700 shadow-sm text-base px-3 py-1">{item.value}</Badge>
                     </div>
                   ))}
                 </CardContent>
               </Card>
 
-              <Card className="shadow-lg border-0 bg-gradient-to-br from-stone-50 to-stone-100/50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-stone-900">
-                    <Icon name="Store" size={20} />
+              <Card className="shadow-xl border border-stone-200 bg-gradient-to-br from-stone-50 to-white">
+                <CardHeader className="border-b border-stone-200">
+                  <CardTitle className="flex items-center gap-2 text-stone-900 text-lg">
+                    <Icon name="Store" size={22} />
                     Диккенс - Итого
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="pt-4 space-y-3">
                   {[
                     { label: 'Всего вилок', value: dickensEntries.reduce((sum, e) => sum + e.forks, 0) },
                     { label: 'Всего ножей', value: dickensEntries.reduce((sum, e) => sum + e.knives, 0) },
                     { label: 'Всего ложек', value: dickensEntries.reduce((sum, e) => sum + e.spoons, 0) },
                     { label: 'Всего тарелок', value: dickensEntries.reduce((sum, e) => sum + e.plates, 0) },
                   ].map((item, i) => (
-                    <div key={i} className="flex justify-between items-center py-2 border-b border-stone-200/50 last:border-0">
-                      <span className="text-sm font-medium text-stone-900">{item.label}</span>
-                      <Badge className="bg-stone-600 hover:bg-stone-700 shadow-sm">{item.value}</Badge>
+                    <div key={i} className="flex justify-between items-center py-3 px-2 border-b border-stone-200 last:border-0 hover:bg-stone-50/50 rounded transition-colors">
+                      <span className="text-sm font-semibold text-stone-900">{item.label}</span>
+                      <Badge className="bg-stone-600 hover:bg-stone-700 shadow-sm text-base px-3 py-1">{item.value}</Badge>
                     </div>
                   ))}
                 </CardContent>
@@ -727,38 +802,54 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-6">
-            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle>Экспорт отчетов - {currentVenue}</CardTitle>
-                <CardDescription>Выберите формат для экспорта данных</CardDescription>
+            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+              <CardHeader className="border-b border-stone-100">
+                <CardTitle className="text-xl text-stone-900">Экспорт отчетов</CardTitle>
+                <CardDescription className="text-stone-600">Выберите формат для экспорта данных</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start gap-4 p-5 border-2 border-red-200 rounded-xl bg-gradient-to-r from-red-50 to-transparent hover:border-red-300 transition-all">
-                  <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg">
-                    <Icon name="FileSpreadsheet" size={26} className="text-white" />
+              <CardContent className="pt-6 space-y-5">
+                <div className="flex items-start gap-5 p-6 border-2 border-red-200 rounded-2xl bg-gradient-to-r from-red-50 via-red-50/50 to-white hover:border-red-300 hover:shadow-md transition-all duration-200">
+                  <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg">
+                    <Icon name="FileSpreadsheet" size={28} className="text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg">CSV отчет</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Экспорт всех данных инвентаризации в формате CSV для использования в Excel или Google Sheets
+                    <h3 className="font-bold text-lg text-stone-900">CSV отчет {currentVenue}</h3>
+                    <p className="text-sm text-stone-600 mt-2">
+                      Экспорт данных заведения {currentVenue} в формате CSV для Excel или Google Sheets
                     </p>
-                    <Button onClick={exportToCSV} className="mt-4 shadow-md" size="sm">
+                    <Button onClick={exportToCSV} className="mt-4 shadow-md bg-red-600 hover:bg-red-700">
                       <Icon name="Download" size={16} className="mr-2" />
-                      Скачать CSV
+                      Скачать CSV - {currentVenue}
                     </Button>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-5 border rounded-xl opacity-60 bg-secondary/20">
-                  <div className="w-14 h-14 bg-secondary rounded-xl flex items-center justify-center">
-                    <Icon name="FileText" size={26} className="text-muted-foreground" />
+                <div className="flex items-start gap-5 p-6 border-2 border-stone-300 rounded-2xl bg-gradient-to-r from-stone-50 via-stone-50/50 to-white hover:border-stone-400 hover:shadow-md transition-all duration-200">
+                  <div className="w-16 h-16 bg-gradient-to-br from-stone-600 to-stone-700 rounded-2xl flex items-center justify-center shadow-lg">
+                    <Icon name="FileSpreadsheet" size={28} className="text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg">PDF отчет</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <h3 className="font-bold text-lg text-stone-900">Общий CSV отчет</h3>
+                    <p className="text-sm text-stone-600 mt-2">
+                      Экспорт данных обоих заведений (PORT + Диккенс) в один файл для полного анализа
+                    </p>
+                    <Button onClick={exportBothVenuesToCSV} className="mt-4 shadow-md bg-stone-700 hover:bg-stone-800">
+                      <Icon name="FileSpreadsheet" size={16} className="mr-2" />
+                      Скачать CSV - Оба заведения
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-5 p-6 border border-stone-200 rounded-2xl bg-stone-50/30">
+                  <div className="w-16 h-16 bg-stone-200 rounded-2xl flex items-center justify-center">
+                    <Icon name="FileText" size={28} className="text-stone-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg text-stone-500">PDF отчет</h3>
+                    <p className="text-sm text-stone-400 mt-2">
                       Формирование детального PDF отчета со статистикой и графиками
                     </p>
-                    <Button disabled className="mt-4" size="sm" variant="outline">
+                    <Button disabled className="mt-4" variant="outline">
                       Скоро доступно
                     </Button>
                   </div>
@@ -766,31 +857,31 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle>Сводка данных - {currentVenue}</CardTitle>
+            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+              <CardHeader className="border-b border-stone-100">
+                <CardTitle className="text-xl text-stone-900">Сводка данных - {currentVenue}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-6 bg-gradient-to-br from-red-50 to-red-100/30 rounded-xl shadow-sm border border-red-100">
-                    <div className="text-4xl font-bold text-red-600">{entries.length}</div>
-                    <div className="text-sm text-muted-foreground mt-2">Всего записей</div>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                  <div className="text-center p-7 bg-gradient-to-br from-red-50 to-white rounded-2xl shadow-md border border-red-100 hover:shadow-lg transition-shadow">
+                    <div className="text-5xl font-bold text-red-600">{entries.length}</div>
+                    <div className="text-sm text-stone-600 mt-3 font-medium">Всего записей</div>
                   </div>
-                  <div className="text-center p-6 bg-gradient-to-br from-stone-50 to-stone-100/30 rounded-xl shadow-sm border border-stone-200">
-                    <div className="text-4xl font-bold text-stone-700">
-                      {entries.length > 0 ? entries[0].date : '-'}
+                  <div className="text-center p-7 bg-gradient-to-br from-stone-50 to-white rounded-2xl shadow-md border border-stone-200 hover:shadow-lg transition-shadow">
+                    <div className="text-5xl font-bold text-stone-700">
+                      {entries.length > 0 ? entries[0].date.split('-').reverse().join('.') : '-'}
                     </div>
-                    <div className="text-sm text-muted-foreground mt-2">Последняя запись</div>
+                    <div className="text-sm text-stone-600 mt-3 font-medium">Последняя запись</div>
                   </div>
-                  <div className="text-center p-6 bg-gradient-to-br from-amber-50 to-amber-100/30 rounded-xl shadow-sm border border-amber-100">
-                    <div className="text-4xl font-bold text-amber-700">
+                  <div className="text-center p-7 bg-gradient-to-br from-amber-50 to-white rounded-2xl shadow-md border border-amber-100 hover:shadow-lg transition-shadow">
+                    <div className="text-5xl font-bold text-amber-700">
                       {calculateTotal('forks') + calculateTotal('knives') + calculateTotal('spoons')}
                     </div>
-                    <div className="text-sm text-muted-foreground mt-2">Всего приборов</div>
+                    <div className="text-sm text-stone-600 mt-3 font-medium">Всего приборов</div>
                   </div>
-                  <div className="text-center p-6 bg-gradient-to-br from-red-100 to-red-50 rounded-xl shadow-sm border border-red-200">
-                    <div className="text-4xl font-bold text-red-700">{calculateTotal('plates')}</div>
-                    <div className="text-sm text-muted-foreground mt-2">Всего тарелок</div>
+                  <div className="text-center p-7 bg-gradient-to-br from-red-100 to-white rounded-2xl shadow-md border border-red-200 hover:shadow-lg transition-shadow">
+                    <div className="text-5xl font-bold text-red-700">{calculateTotal('plates')}</div>
+                    <div className="text-sm text-stone-600 mt-3 font-medium">Всего тарелок</div>
                   </div>
                 </div>
               </CardContent>
