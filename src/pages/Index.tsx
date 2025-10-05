@@ -14,7 +14,10 @@ import { SplashScreen } from '@/components/SplashScreen';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    const hasSeenSplash = sessionStorage.getItem('hasSeenSplash');
+    return !hasSeenSplash;
+  });
   const [currentVenue, setCurrentVenue] = useState<'PORT' | 'Диккенс'>('PORT');
   const [entries, setEntries] = useState<InventoryEntry[]>([]);
   const [portEntries, setPortEntries] = useState<InventoryEntry[]>([]);
@@ -41,6 +44,11 @@ const Index = () => {
   });
 
   const colors = currentVenue === 'PORT' ? portColors : dickensColors;
+
+  const handleSplashComplete = () => {
+    sessionStorage.setItem('hasSeenSplash', 'true');
+    setShowSplash(false);
+  };
 
   useEffect(() => {
     loadAllData();
@@ -350,7 +358,7 @@ const Index = () => {
     : 'bg-gradient-to-br from-blue-50 via-indigo-50/30 to-slate-100/20';
 
   if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+    return <SplashScreen onComplete={handleSplashComplete} />;
   }
 
   return (
