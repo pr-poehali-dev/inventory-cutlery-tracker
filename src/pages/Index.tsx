@@ -508,19 +508,19 @@ const Index = () => {
         <Tabs defaultValue="inventory" className="space-y-8">
           <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-4 bg-gradient-to-r from-white via-stone-50 to-white border-2 border-stone-200 p-1.5 md:p-2.5 rounded-2xl md:rounded-3xl shadow-2xl gap-1 md:gap-0">
             <TabsTrigger value="inventory" className={`rounded-xl md:rounded-2xl font-bold text-[10px] sm:text-sm md:text-base py-3 md:py-3.5 px-1 sm:px-3 md:px-4 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 active:scale-95 md:hover:scale-105 touch-manipulation flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2`}>
-              <Icon name="Table" size={16} className="sm:size-18" />
+              <Icon name="Table" size={16} />
               <span className="leading-tight">Инвент.</span>
             </TabsTrigger>
             <TabsTrigger value="stats" className={`rounded-xl md:rounded-2xl font-bold text-[10px] sm:text-sm md:text-base py-3 md:py-3.5 px-1 sm:px-3 md:px-4 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 active:scale-95 md:hover:scale-105 touch-manipulation flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2`}>
-              <Icon name="BarChart3" size={16} className="sm:size-18" />
+              <Icon name="BarChart3" size={16} />
               <span className="leading-tight">Стат.</span>
             </TabsTrigger>
             <TabsTrigger value="comparison" className={`rounded-xl md:rounded-2xl font-bold text-[10px] sm:text-sm md:text-base py-3 md:py-3.5 px-1 sm:px-3 md:px-4 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 active:scale-95 md:hover:scale-105 touch-manipulation flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2`}>
-              <Icon name="TrendingUp" size={16} className="sm:size-18" />
+              <Icon name="TrendingUp" size={16} />
               <span className="leading-tight">Сравн.</span>
             </TabsTrigger>
             <TabsTrigger value="responsible" className={`rounded-xl md:rounded-2xl font-bold text-[10px] sm:text-sm md:text-base py-3 md:py-3.5 px-1 sm:px-3 md:px-4 data-[state=active]:${colors.primary} data-[state=active]:text-white data-[state=active]:shadow-xl transition-all duration-300 active:scale-95 md:hover:scale-105 touch-manipulation flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2`}>
-              <Icon name="UserCheck" size={16} className="sm:size-18" />
+              <Icon name="UserCheck" size={16} />
               <span className="leading-tight">Отв.</span>
             </TabsTrigger>
           </TabsList>
