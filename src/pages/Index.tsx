@@ -68,7 +68,6 @@ const Index = () => {
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [editingEntry, setEditingEntry] = useState<InventoryEntry | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isExcelUpdating, setIsExcelUpdating] = useState(false);
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -320,19 +319,7 @@ const Index = () => {
     toast.success('Отчет обоих заведений экспортирован');
   };
 
-  const updateExcelData = () => {
-    if (portEntries.length === 0 && dickensEntries.length === 0) return;
 
-    setIsExcelUpdating(true);
-    
-    setTimeout(() => {
-      setIsExcelUpdating(false);
-      toast.success('📊 Excel-база обновлена!', {
-        description: 'Данные синхронизированы',
-        duration: 2000,
-      });
-    }, 800);
-  };
 
   const exportToExcel = () => {
     const portData = portEntries.map(e => ({
@@ -376,11 +363,12 @@ const Index = () => {
     ws['!cols'] = colWidths;
 
     XLSX.writeFile(wb, 'Инвентаризация_Полная_База.xlsx');
+    toast.success('📊 Excel файл скачан!', {
+      description: 'Полная база данных обоих заведений',
+    });
   };
 
-  useEffect(() => {
-    updateExcelData();
-  }, [portEntries, dickensEntries]);
+
 
   const getChartData = () => {
     return [...entries]
