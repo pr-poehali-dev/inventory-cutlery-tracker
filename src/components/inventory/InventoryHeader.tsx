@@ -1,56 +1,62 @@
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import { ColorScheme } from '@/types/inventory';
 
 interface InventoryHeaderProps {
   currentVenue: 'PORT' | 'Диккенс';
+  colors: ColorScheme;
   onVenueChange: (venue: 'PORT' | 'Диккенс') => void;
-  onExport: () => void;
+  onExportExcel: () => void;
 }
 
-const InventoryHeader = ({ currentVenue, onVenueChange, onExport }: InventoryHeaderProps) => {
+export const InventoryHeader = ({ currentVenue, colors, onVenueChange, onExportExcel }: InventoryHeaderProps) => {
   return (
-    <header className="border-b bg-card/80 backdrop-blur-sm shadow-sm">
-      <div className="container mx-auto px-4 py-5">
+    <header className="border-b border-stone-200/50 bg-white/98 backdrop-blur-xl shadow-lg sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
-              <Icon name="Utensils" className="text-primary-foreground" size={22} />
+            <div className={`w-14 h-14 ${colors.primary} rounded-2xl flex items-center justify-center shadow-lg transition-colors`}>
+              <Icon name="Utensils" className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-stone-900">
                 Система инвентаризации
               </h1>
-              <p className="text-sm text-muted-foreground">Учет приборов и посуды</p>
+              <p className="text-sm text-stone-600">Учет приборов и посуды</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="flex bg-secondary/50 rounded-xl p-1.5 shadow-sm border">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex bg-gradient-to-r from-stone-100 to-stone-50 rounded-2xl p-2 shadow-md border border-stone-200">
               <button
                 onClick={() => onVenueChange('PORT')}
-                className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
+                className={`px-7 py-3 rounded-xl font-bold transition-all duration-300 transform ${
                   currentVenue === 'PORT'
-                    ? 'bg-primary text-primary-foreground shadow-md scale-105'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80'
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-300/50 scale-105'
+                    : 'text-stone-600 hover:text-stone-900 hover:bg-white/70 hover:scale-105'
                 }`}
               >
                 PORT
               </button>
               <button
                 onClick={() => onVenueChange('Диккенс')}
-                className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
+                className={`px-7 py-3 rounded-xl font-bold transition-all duration-300 transform ${
                   currentVenue === 'Диккенс'
-                    ? 'bg-primary text-primary-foreground shadow-md scale-105'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80'
+                    ? 'bg-gradient-to-r from-blue-900 to-blue-950 text-white shadow-lg shadow-blue-400/50 scale-105'
+                    : 'text-stone-600 hover:text-stone-900 hover:bg-white/70 hover:scale-105'
                 }`}
               >
                 Диккенс
               </button>
             </div>
 
-            <Button onClick={onExport} variant="outline" className="shadow-sm">
-              <Icon name="Download" size={16} className="mr-2" />
-              Экспорт
+            <Button 
+              onClick={onExportExcel} 
+              className={`shadow-lg ${colors.primary} font-bold px-6 py-3 text-base hover:scale-105 transition-transform relative overflow-hidden group`}
+            >
+              <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+              <Icon name="FileSpreadsheet" size={18} className="mr-2 relative z-10" />
+              <span className="relative z-10">Скачать Excel</span>
             </Button>
           </div>
         </div>
@@ -58,5 +64,3 @@ const InventoryHeader = ({ currentVenue, onVenueChange, onExport }: InventoryHea
     </header>
   );
 };
-
-export default InventoryHeader;
