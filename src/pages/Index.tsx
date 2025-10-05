@@ -10,9 +10,11 @@ import { StatsTab } from '@/components/inventory/StatsTab';
 import { ComparisonTab } from '@/components/inventory/ComparisonTab';
 import { ResponsibleTab } from '@/components/inventory/ResponsibleTab';
 import { EditDialog } from '@/components/inventory/EditDialog';
+import { SplashScreen } from '@/components/SplashScreen';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
+  const [showSplash, setShowSplash] = useState(true);
   const [currentVenue, setCurrentVenue] = useState<'PORT' | 'Диккенс'>('PORT');
   const [entries, setEntries] = useState<InventoryEntry[]>([]);
   const [portEntries, setPortEntries] = useState<InventoryEntry[]>([]);
@@ -346,6 +348,10 @@ const Index = () => {
   const bgGradient = currentVenue === 'PORT' 
     ? 'bg-gradient-to-br from-amber-50 via-orange-50/30 to-red-50/20'
     : 'bg-gradient-to-br from-blue-50 via-indigo-50/30 to-slate-100/20';
+
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
 
   return (
     <div className={`min-h-screen ${bgGradient} transition-all duration-500`}>
