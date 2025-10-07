@@ -241,62 +241,79 @@ const Index = () => {
   };
 
   const exportToExcel = () => {
-    const portData = portEntries.map(e => ({
-      'Дата': e.date,
-      'Заведение': 'PORT',
-      'Вилки': e.forks,
-      'Ножи': e.knives,
-      'Стейковые ножи': e.steak_knives,
-      'Ложки': e.spoons,
-      'Десертные ложки': e.dessert_spoons,
-      'Кулер под лед': e.ice_cooler,
-      'Тарелки': e.plates,
-      'Щипцы (сахар)': e.sugar_tongs,
-      'Щипцы (лед)': e.ice_tongs,
-    }));
+    const allDates = Array.from(new Set([...portEntries.map(e => e.date), ...dickensEntries.map(e => e.date)])).sort().reverse();
 
-    const dickensData = dickensEntries.map(e => ({
-      'Дата': e.date,
-      'Заведение': 'Диккенс',
-      'Вилки': e.forks,
-      'Ножи': e.knives,
-      'Стейковые ножи': e.steak_knives,
-      'Ложки': e.spoons,
-      'Десертные ложки': e.dessert_spoons,
-      'Кулер под лед': e.ice_cooler,
-      'Тарелки': e.plates,
-      'Щипцы (сахар)': e.sugar_tongs,
-      'Щипцы (лед)': e.ice_tongs,
-    }));
+    const allData: any[] = [];
 
-    const allData = [...portData, ...dickensData].sort((a, b) => b['Дата'].localeCompare(a['Дата']));
+    allDates.forEach(date => {
+      const portEntry = portEntries.find(e => e.date === date);
+      const dickensEntry = dickensEntries.find(e => e.date === date);
 
-    const filteredDates = getFilteredDates();
-    const portFiltered = portEntries.filter(e => filteredDates.includes(e.date));
-    const dickensFiltered = dickensEntries.filter(e => filteredDates.includes(e.date));
+      if (portEntry) {
+        allData.push({
+          'Дата': date,
+          'Заведение': 'PORT',
+          'Вилки': portEntry.forks,
+          'Ножи': portEntry.knives,
+          'Стейковые ножи': portEntry.steak_knives,
+          'Ложки': portEntry.spoons,
+          'Десертные ложки': portEntry.dessert_spoons,
+          'Кулер под лед': portEntry.ice_cooler,
+          'Тарелки': portEntry.plates,
+          'Щипцы (сахар)': portEntry.sugar_tongs,
+          'Щипцы (лед)': portEntry.ice_tongs,
+        });
+      }
 
-    const totalStats = {
-      'Дата': 'Общая статистика',
-      'Заведение': 'PORT + Диккенс за период',
-      'Вилки': portFiltered.reduce((sum, e) => sum + e.forks, 0) + dickensFiltered.reduce((sum, e) => sum + e.forks, 0),
-      'Ножи': portFiltered.reduce((sum, e) => sum + e.knives, 0) + dickensFiltered.reduce((sum, e) => sum + e.knives, 0),
-      'Стейковые ножи': portFiltered.reduce((sum, e) => sum + e.steak_knives, 0) + dickensFiltered.reduce((sum, e) => sum + e.steak_knives, 0),
-      'Ложки': portFiltered.reduce((sum, e) => sum + e.spoons, 0) + dickensFiltered.reduce((sum, e) => sum + e.spoons, 0),
-      'Десертные ложки': portFiltered.reduce((sum, e) => sum + e.dessert_spoons, 0) + dickensFiltered.reduce((sum, e) => sum + e.dessert_spoons, 0),
-      'Кулер под лед': portFiltered.reduce((sum, e) => sum + e.ice_cooler, 0) + dickensFiltered.reduce((sum, e) => sum + e.ice_cooler, 0),
-      'Тарелки': portFiltered.reduce((sum, e) => sum + e.plates, 0) + dickensFiltered.reduce((sum, e) => sum + e.plates, 0),
-      'Щипцы (сахар)': portFiltered.reduce((sum, e) => sum + e.sugar_tongs, 0) + dickensFiltered.reduce((sum, e) => sum + e.sugar_tongs, 0),
-      'Щипцы (лед)': portFiltered.reduce((sum, e) => sum + e.ice_tongs, 0) + dickensFiltered.reduce((sum, e) => sum + e.ice_tongs, 0),
-    };
+      if (dickensEntry) {
+        allData.push({
+          'Дата': date,
+          'Заведение': 'Диккенс',
+          'Вилки': dickensEntry.forks,
+          'Ножи': dickensEntry.knives,
+          'Стейковые ножи': dickensEntry.steak_knives,
+          'Ложки': dickensEntry.spoons,
+          'Десертные ложки': dickensEntry.dessert_spoons,
+          'Кулер под лед': dickensEntry.ice_cooler,
+          'Тарелки': dickensEntry.plates,
+          'Щипцы (сахар)': dickensEntry.sugar_tongs,
+          'Щипцы (лед)': dickensEntry.ice_tongs,
+        });
+      }
 
-    const dataWithStats = [...allData, totalStats];
+      if (portEntry || dickensEntry) {
+        const totalForks = (portEntry?.forks || 0) + (dickensEntry?.forks || 0);
+        const totalKnives = (portEntry?.knives || 0) + (dickensEntry?.knives || 0);
+        const totalSteakKnives = (portEntry?.steak_knives || 0) + (dickensEntry?.steak_knives || 0);
+        const totalSpoons = (portEntry?.spoons || 0) + (dickensEntry?.spoons || 0);
+        const totalDessertSpoons = (portEntry?.dessert_spoons || 0) + (dickensEntry?.dessert_spoons || 0);
+        const totalIceCooler = (portEntry?.ice_cooler || 0) + (dickensEntry?.ice_cooler || 0);
+        const totalPlates = (portEntry?.plates || 0) + (dickensEntry?.plates || 0);
+        const totalSugarTongs = (portEntry?.sugar_tongs || 0) + (dickensEntry?.sugar_tongs || 0);
+        const totalIceTongs = (portEntry?.ice_tongs || 0) + (dickensEntry?.ice_tongs || 0);
 
-    const ws = XLSX.utils.json_to_sheet(dataWithStats);
+        allData.push({
+          'Дата': date,
+          'Заведение': 'ИТОГО за дату',
+          'Вилки': totalForks,
+          'Ножи': totalKnives,
+          'Стейковые ножи': totalSteakKnives,
+          'Ложки': totalSpoons,
+          'Десертные ложки': totalDessertSpoons,
+          'Кулер под лед': totalIceCooler,
+          'Тарелки': totalPlates,
+          'Щипцы (сахар)': totalSugarTongs,
+          'Щипцы (лед)': totalIceTongs,
+        });
+      }
+    });
+
+    const ws = XLSX.utils.json_to_sheet(allData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Инвентаризация');
 
     const colWidths = [
-      { wch: 18 }, { wch: 25 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, 
+      { wch: 12 }, { wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, 
       { wch: 10 }, { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 12 }
     ];
     ws['!cols'] = colWidths;
