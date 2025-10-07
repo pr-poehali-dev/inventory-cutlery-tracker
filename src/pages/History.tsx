@@ -64,6 +64,10 @@ const History = () => {
 
   const groupByMonth = (entries: HistoryEntry[]) => {
     const groups: { [key: string]: HistoryEntry[] } = {};
+    const currentMonth = new Date().toLocaleDateString('ru-RU', { 
+      year: 'numeric', 
+      month: 'long' 
+    });
     
     entries.forEach((entry) => {
       const date = new Date(entry.created_at);
@@ -81,7 +85,7 @@ const History = () => {
     const monthGroupsArray: MonthGroup[] = Object.keys(groups).map((month) => ({
       month,
       entries: groups[month],
-      isOpen: true
+      isOpen: month === currentMonth
     }));
 
     setMonthGroups(monthGroupsArray);
