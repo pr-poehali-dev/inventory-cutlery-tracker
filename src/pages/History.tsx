@@ -101,7 +101,7 @@ const History = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
@@ -116,43 +116,43 @@ const History = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {history.map((entry) => (
               <Card 
                 key={entry.id} 
-                className="shadow-xl border-0 bg-white/98 backdrop-blur-md hover:shadow-2xl transition-all duration-300 animate-in fade-in-50"
+                className="shadow-lg border-0 bg-white/98 backdrop-blur-md hover:shadow-xl transition-all duration-300 animate-in fade-in-50"
               >
-                <CardHeader className={`bg-gradient-to-r ${colors.accent} border-b border-stone-200/50`}>
-                  <CardTitle className="flex items-center justify-between">
+                <CardHeader className={`bg-gradient-to-r ${colors.accent} border-b border-stone-200/50 py-4`}>
+                  <CardTitle className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2.5 rounded-xl ${colors.primary}`}>
-                        <Icon name="UserCheck" size={22} className="text-white" />
+                      <div className={`p-2 rounded-lg ${colors.primary}`}>
+                        <Icon name="UserCheck" size={18} className="text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-stone-900">
+                        <h3 className="text-lg font-bold text-stone-900">
                           {entry.responsible_name}
                         </h3>
-                        <p className="text-sm text-stone-600 mt-1 font-normal">
+                        <p className="text-xs text-stone-600 mt-0.5 font-normal">
                           Дата заполнения: {formatDate(entry.responsible_date)}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-stone-500">
+                      <p className="text-xs text-stone-500">
                         Добавлено: {formatDateTime(entry.created_at)}
                       </p>
                     </div>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-stone-50 rounded-lg p-4">
-                      <p className="text-sm text-stone-600 mb-1">Склад</p>
-                      <p className="font-semibold text-stone-900">{entry.warehouse}</p>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-stone-50 rounded-lg p-3">
+                      <p className="text-xs text-stone-600 mb-1">Склад</p>
+                      <p className="font-semibold text-stone-900 text-sm">{entry.warehouse}</p>
                     </div>
-                    <div className="bg-stone-50 rounded-lg p-4">
-                      <p className="text-sm text-stone-600 mb-1">Наименование</p>
-                      <p className="font-semibold text-stone-900">{entry.item_name}</p>
+                    <div className="bg-stone-50 rounded-lg p-3">
+                      <p className="text-xs text-stone-600 mb-1">Наименование</p>
+                      <p className="font-semibold text-stone-900 text-sm">{entry.item_name}</p>
                     </div>
                   </div>
                 </CardContent>
