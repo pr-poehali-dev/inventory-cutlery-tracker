@@ -253,6 +253,7 @@ const Index = () => {
       'Тарелки': e.plates,
       'Щипцы (сахар)': e.sugar_tongs,
       'Щипцы (лед)': e.ice_tongs,
+      'Общее количество': e.forks + e.knives + e.steak_knives + e.spoons + e.dessert_spoons + e.ice_cooler + e.plates + e.sugar_tongs + e.ice_tongs,
     }));
 
     const dickensData = dickensEntries.map(e => ({
@@ -267,6 +268,7 @@ const Index = () => {
       'Тарелки': e.plates,
       'Щипцы (сахар)': e.sugar_tongs,
       'Щипцы (лед)': e.ice_tongs,
+      'Общее количество': e.forks + e.knives + e.steak_knives + e.spoons + e.dessert_spoons + e.ice_cooler + e.plates + e.sugar_tongs + e.ice_tongs,
     }));
 
     const allData = [...portData, ...dickensData].sort((a, b) => b['Дата'].localeCompare(a['Дата']));
@@ -277,7 +279,7 @@ const Index = () => {
 
     const colWidths = [
       { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, 
-      { wch: 10 }, { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 12 }
+      { wch: 10 }, { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 18 }
     ];
     ws['!cols'] = colWidths;
 
