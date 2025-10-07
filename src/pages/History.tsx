@@ -13,10 +13,17 @@ interface HistoryEntry {
   item_name: string;
 }
 
+interface MonthGroup {
+  month: string;
+  entries: HistoryEntry[];
+  isOpen: boolean;
+}
+
 const History = () => {
   const navigate = useNavigate();
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [monthGroups, setMonthGroups] = useState<MonthGroup[]>([]);
 
   const colors = {
     primary: 'bg-gradient-to-r from-amber-600 to-orange-600',
@@ -47,11 +54,45 @@ const History = () => {
         );
       
       setHistory(filteredHistory);
+      groupByMonth(filteredHistory);
     } catch (error) {
       console.error('Ошибка загрузки истории:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const groupByMonth = (entries: HistoryEntry[]) => {
+    const groups: { [key: string]: HistoryEntry[] } = {};
+    
+    entries.forEach((entry) => {
+      const date = new Date(entry.created_at);
+      const monthKey = date.toLocaleDateString('ru-RU', { 
+        year: 'numeric', 
+        month: 'long' 
+      });
+      
+      if (!groups[monthKey]) {
+        groups[monthKey] = [];
+      }
+      groups[monthKey].push(entry);
+    });
+
+    const monthGroupsArray: MonthGroup[] = Object.keys(groups).map((month) => ({
+      month,
+      entries: groups[month],
+      isOpen: true
+    }));
+
+    setMonthGroups(monthGroupsArray);
+  };
+
+  const toggleMonth = (index: number) => {
+    setMonthGroups(prev => 
+      prev.map((group, i) => 
+        i === index ? { ...group, isOpen: !group.isOpen } : group
+      )
+    );
   };
 
   const formatDate = (dateString: string) => {
@@ -116,47 +157,79 @@ const History = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
-            {history.map((entry) => (
-              <Card 
-                key={entry.id} 
-                className="shadow-lg border-0 bg-white/98 backdrop-blur-md hover:shadow-xl transition-all duration-300 animate-in fade-in-50"
-              >
-                <CardHeader className={`bg-gradient-to-r ${colors.accent} border-b border-stone-200/50 py-4`}>
-                  <CardTitle className="flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${colors.primary}`}>
-                        <Icon name="UserCheck" size={18} className="text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-stone-900">
-                          {entry.responsible_name}
-                        </h3>
-                        <p className="text-xs text-stone-600 mt-0.5 font-normal">
-                          Дата заполнения: {formatDate(entry.responsible_date)}
-                        </p>
-                      </div>
+          <div className="space-y-4">
+            {monthGroups.map((group, index) => (
+              <div key={group.month} className="animate-in fade-in-50">
+                <button
+                  onClick={() => toggleMonth(index)}
+                  className="w-full flex items-center justify-between p-4 bg-white/98 backdrop-blur-md rounded-lg shadow-md hover:shadow-lg transition-all duration-300 mb-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${colors.primary}`}>
+                      <Icon name="Calendar" size={20} className="text-white" />
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-stone-500">
-                        Добавлено: {formatDateTime(entry.created_at)}
+                    <div className="text-left">
+                      <h2 className="text-lg font-bold text-stone-900 capitalize">
+                        {group.month}
+                      </h2>
+                      <p className="text-xs text-stone-600">
+                        Записей: {group.entries.length}
                       </p>
                     </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-stone-50 rounded-lg p-3">
-                      <p className="text-xs text-stone-600 mb-1">Склад</p>
-                      <p className="font-semibold text-stone-900 text-sm">{entry.warehouse}</p>
-                    </div>
-                    <div className="bg-stone-50 rounded-lg p-3">
-                      <p className="text-xs text-stone-600 mb-1">Наименование</p>
-                      <p className="font-semibold text-stone-900 text-sm">{entry.item_name}</p>
-                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                  <Icon 
+                    name={group.isOpen ? "ChevronUp" : "ChevronDown"} 
+                    size={24} 
+                    className="text-stone-600 transition-transform duration-300"
+                  />
+                </button>
+
+                {group.isOpen && (
+                  <div className="space-y-3 pl-2">
+                    {group.entries.map((entry) => (
+                      <Card 
+                        key={entry.id} 
+                        className="shadow-lg border-0 bg-white/98 backdrop-blur-md hover:shadow-xl transition-all duration-300"
+                      >
+                        <CardHeader className={`bg-gradient-to-r ${colors.accent} border-b border-stone-200/50 py-4`}>
+                          <CardTitle className="flex items-center justify-between flex-wrap gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className={`p-2 rounded-lg ${colors.primary}`}>
+                                <Icon name="UserCheck" size={18} className="text-white" />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-bold text-stone-900">
+                                  {entry.responsible_name}
+                                </h3>
+                                <p className="text-xs text-stone-600 mt-0.5 font-normal">
+                                  Дата заполнения: {formatDate(entry.responsible_date)}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-stone-500">
+                                Добавлено: {formatDateTime(entry.created_at)}
+                              </p>
+                            </div>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-stone-50 rounded-lg p-3">
+                              <p className="text-xs text-stone-600 mb-1">Склад</p>
+                              <p className="font-semibold text-stone-900 text-sm">{entry.warehouse}</p>
+                            </div>
+                            <div className="bg-stone-50 rounded-lg p-3">
+                              <p className="text-xs text-stone-600 mb-1">Наименование</p>
+                              <p className="font-semibold text-stone-900 text-sm">{entry.item_name}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}
