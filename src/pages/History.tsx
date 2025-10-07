@@ -99,6 +99,13 @@ const History = () => {
     );
   };
 
+  const toggleAll = () => {
+    const allOpen = monthGroups.every(group => group.isOpen);
+    setMonthGroups(prev => 
+      prev.map(group => ({ ...group, isOpen: !allOpen }))
+    );
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ru-RU', {
@@ -161,7 +168,22 @@ const History = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <>
+            <div className="mb-4 flex justify-end">
+              <Button
+                onClick={toggleAll}
+                variant="outline"
+                className="bg-white/98 hover:bg-white border-amber-200 text-stone-700 hover:text-stone-900"
+              >
+                <Icon 
+                  name={monthGroups.every(g => g.isOpen) ? "ChevronsUp" : "ChevronsDown"} 
+                  size={18} 
+                  className="mr-2"
+                />
+                {monthGroups.every(g => g.isOpen) ? "Свернуть все" : "Развернуть все"}
+              </Button>
+            </div>
+            <div className="space-y-4">
             {monthGroups.map((group, index) => (
               <div key={group.month} className="animate-in fade-in-50">
                 <button
@@ -235,7 +257,8 @@ const History = () => {
                 )}
               </div>
             ))}
-          </div>
+            </div>
+          </>
         )}
       </main>
     </div>
