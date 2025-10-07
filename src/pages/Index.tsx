@@ -253,7 +253,6 @@ const Index = () => {
       'Тарелки': e.plates,
       'Щипцы (сахар)': e.sugar_tongs,
       'Щипцы (лед)': e.ice_tongs,
-      'Общее количество': e.forks + e.knives + e.steak_knives + e.spoons + e.dessert_spoons + e.ice_cooler + e.plates + e.sugar_tongs + e.ice_tongs,
     }));
 
     const dickensData = dickensEntries.map(e => ({
@@ -268,18 +267,37 @@ const Index = () => {
       'Тарелки': e.plates,
       'Щипцы (сахар)': e.sugar_tongs,
       'Щипцы (лед)': e.ice_tongs,
-      'Общее количество': e.forks + e.knives + e.steak_knives + e.spoons + e.dessert_spoons + e.ice_cooler + e.plates + e.sugar_tongs + e.ice_tongs,
     }));
 
     const allData = [...portData, ...dickensData].sort((a, b) => b['Дата'].localeCompare(a['Дата']));
 
-    const ws = XLSX.utils.json_to_sheet(allData);
+    const filteredDates = getFilteredDates();
+    const portFiltered = portEntries.filter(e => filteredDates.includes(e.date));
+    const dickensFiltered = dickensEntries.filter(e => filteredDates.includes(e.date));
+
+    const totalStats = {
+      'Дата': 'Общая статистика',
+      'Заведение': 'PORT + Диккенс за период',
+      'Вилки': portFiltered.reduce((sum, e) => sum + e.forks, 0) + dickensFiltered.reduce((sum, e) => sum + e.forks, 0),
+      'Ножи': portFiltered.reduce((sum, e) => sum + e.knives, 0) + dickensFiltered.reduce((sum, e) => sum + e.knives, 0),
+      'Стейковые ножи': portFiltered.reduce((sum, e) => sum + e.steak_knives, 0) + dickensFiltered.reduce((sum, e) => sum + e.steak_knives, 0),
+      'Ложки': portFiltered.reduce((sum, e) => sum + e.spoons, 0) + dickensFiltered.reduce((sum, e) => sum + e.spoons, 0),
+      'Десертные ложки': portFiltered.reduce((sum, e) => sum + e.dessert_spoons, 0) + dickensFiltered.reduce((sum, e) => sum + e.dessert_spoons, 0),
+      'Кулер под лед': portFiltered.reduce((sum, e) => sum + e.ice_cooler, 0) + dickensFiltered.reduce((sum, e) => sum + e.ice_cooler, 0),
+      'Тарелки': portFiltered.reduce((sum, e) => sum + e.plates, 0) + dickensFiltered.reduce((sum, e) => sum + e.plates, 0),
+      'Щипцы (сахар)': portFiltered.reduce((sum, e) => sum + e.sugar_tongs, 0) + dickensFiltered.reduce((sum, e) => sum + e.sugar_tongs, 0),
+      'Щипцы (лед)': portFiltered.reduce((sum, e) => sum + e.ice_tongs, 0) + dickensFiltered.reduce((sum, e) => sum + e.ice_tongs, 0),
+    };
+
+    const dataWithStats = [...allData, totalStats];
+
+    const ws = XLSX.utils.json_to_sheet(dataWithStats);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Инвентаризация');
 
     const colWidths = [
-      { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, 
-      { wch: 10 }, { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 18 }
+      { wch: 18 }, { wch: 25 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, 
+      { wch: 10 }, { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 12 }
     ];
     ws['!cols'] = colWidths;
 
