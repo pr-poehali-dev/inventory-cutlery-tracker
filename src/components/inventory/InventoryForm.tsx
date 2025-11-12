@@ -16,6 +16,7 @@ interface FormData {
   plates: string;
   sugarTongs: string;
   iceTongs: string;
+  ashtrays: string;
   responsible_name: string;
   responsible_date: string;
 }
@@ -157,6 +158,18 @@ export const InventoryForm = ({ currentVenue, colors, formData, onInputChange, o
               placeholder="0"
               value={formData.iceTongs}
               onChange={(e) => onInputChange('iceTongs', e.target.value)}
+              className="shadow-sm"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ashtrays" className="text-sm font-medium">Пепельницы</Label>
+            <Input
+              id="ashtrays"
+              type="number"
+              placeholder="0"
+              value={formData.ashtrays}
+              onChange={(e) => onInputChange('ashtrays', e.target.value)}
               className="shadow-sm"
             />
           </div>

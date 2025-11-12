@@ -107,6 +107,14 @@ export const EditDialog = ({ isOpen, onOpenChange, editingEntry, onEntryChange, 
               onChange={(e) => onEntryChange({ ...editingEntry, ice_tongs: Number(e.target.value) })}
             />
           </div>
+          <div className="space-y-2">
+            <Label>Пепельницы</Label>
+            <Input
+              type="number"
+              value={editingEntry.ashtrays}
+              onChange={(e) => onEntryChange({ ...editingEntry, ashtrays: Number(e.target.value) })}
+            />
+          </div>
           <div className="col-span-2 pt-4 mt-4 border-t-2 border-stone-200">
             <h3 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
               <Icon name="UserCheck" size={20} className="text-amber-600" />

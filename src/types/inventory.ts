@@ -11,6 +11,7 @@ export interface InventoryEntry {
   plates: number;
   sugar_tongs: number;
   ice_tongs: number;
+  ashtrays: number;
   responsible_name?: string;
   responsible_date?: string;
   created_at?: string;

@@ -60,6 +60,7 @@ export const InventoryTable = ({ currentVenue, colors, entries, loading, onEdit,
                     <TableHead className="text-right">Тарелки</TableHead>
                     <TableHead className="text-right">Щ. сахар</TableHead>
                     <TableHead className="text-right">Щ. лед</TableHead>
+                    <TableHead className="text-right">Пепельн.</TableHead>
                     <TableHead className="text-center">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -76,6 +77,7 @@ export const InventoryTable = ({ currentVenue, colors, entries, loading, onEdit,
                       <TableCell className="text-right">{entry.plates}</TableCell>
                       <TableCell className="text-right">{entry.sugar_tongs}</TableCell>
                       <TableCell className="text-right">{entry.ice_tongs}</TableCell>
+                      <TableCell className="text-right">{entry.ashtrays}</TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <Button

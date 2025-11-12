@@ -76,6 +76,7 @@ export const StatsTab = ({
               { label: 'Тарелки', key: 'plates' as const, icon: 'Circle', color: 'from-red-600 to-red-700' },
               { label: 'Щипцы (сахар)', key: 'sugar_tongs' as const, icon: 'Wrench', color: 'from-pink-500 to-pink-600' },
               { label: 'Щипцы (лед)', key: 'ice_tongs' as const, icon: 'Grip', color: 'from-blue-500 to-blue-600' },
+              { label: 'Пепельницы', key: 'ashtrays' as const, icon: 'Cigarette', color: 'from-gray-500 to-gray-600' },
             ].map(({ label, key, icon, color }) => {
               const data = getDataForDateRange(key);
               return (

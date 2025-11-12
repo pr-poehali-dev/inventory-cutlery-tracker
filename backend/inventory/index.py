@@ -41,7 +41,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cur.execute('''
                 SELECT id, venue, entry_date::text as date, 
                        forks, knives, steak_knives, spoons, dessert_spoons,
-                       ice_cooler, plates, sugar_tongs, ice_tongs,
+                       ice_cooler, plates, sugar_tongs, ice_tongs, ashtrays,
                        responsible_name, responsible_date::text,
                        created_at::text
                 FROM t_p23128842_inventory_cutlery_tr.inventory_entries
@@ -72,12 +72,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cur.execute('''
                 INSERT INTO t_p23128842_inventory_cutlery_tr.inventory_entries
                 (venue, entry_date, forks, knives, steak_knives, spoons, 
-                 dessert_spoons, ice_cooler, plates, sugar_tongs, ice_tongs,
+                 dessert_spoons, ice_cooler, plates, sugar_tongs, ice_tongs, ashtrays,
                  responsible_name, responsible_date)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id, venue, entry_date::text as date, 
                           forks, knives, steak_knives, spoons, dessert_spoons,
-                          ice_cooler, plates, sugar_tongs, ice_tongs,
+                          ice_cooler, plates, sugar_tongs, ice_tongs, ashtrays,
                           responsible_name, responsible_date::text
             ''', (
                 body_data['venue'],
@@ -91,6 +91,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 body_data['plates'],
                 body_data['sugarTongs'],
                 body_data['iceTongs'],
+                body_data.get('ashtrays', 0),
                 body_data.get('responsible_name'),
                 body_data.get('responsible_date')
             ))
@@ -132,12 +133,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 UPDATE t_p23128842_inventory_cutlery_tr.inventory_entries
                 SET venue = %s, entry_date = %s, forks = %s, knives = %s, 
                     steak_knives = %s, spoons = %s, dessert_spoons = %s, 
-                    ice_cooler = %s, plates = %s, sugar_tongs = %s, ice_tongs = %s,
+                    ice_cooler = %s, plates = %s, sugar_tongs = %s, ice_tongs = %s, ashtrays = %s,
                     responsible_name = %s, responsible_date = %s
                 WHERE id = %s
                 RETURNING id, venue, entry_date::text as date, 
                           forks, knives, steak_knives, spoons, dessert_spoons,
-                          ice_cooler, plates, sugar_tongs, ice_tongs,
+                          ice_cooler, plates, sugar_tongs, ice_tongs, ashtrays,
                           responsible_name, responsible_date::text
             ''', (
                 body_data['venue'],
@@ -151,6 +152,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 body_data['plates'],
                 body_data['sugarTongs'],
                 body_data['iceTongs'],
+                body_data.get('ashtrays', 0),
                 body_data.get('responsible_name'),
                 body_data.get('responsible_date'),
                 entry_id

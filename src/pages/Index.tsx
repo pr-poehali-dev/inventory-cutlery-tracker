@@ -39,6 +39,7 @@ const Index = () => {
     plates: '',
     sugarTongs: '',
     iceTongs: '',
+    ashtrays: '',
     responsible_name: '',
     responsible_date: new Date().toISOString().split('T')[0],
   });
@@ -118,6 +119,7 @@ const Index = () => {
           plates: Number(formData.plates) || 0,
           sugarTongs: Number(formData.sugarTongs) || 0,
           iceTongs: Number(formData.iceTongs) || 0,
+          ashtrays: Number(formData.ashtrays) || 0,
           responsible_name: formData.responsible_name,
           responsible_date: formData.responsible_date,
         }),
@@ -135,6 +137,7 @@ const Index = () => {
           plates: '',
           sugarTongs: '',
           iceTongs: '',
+          ashtrays: '',
           responsible_name: '',
           responsible_date: new Date().toISOString().split('T')[0],
         });
@@ -172,6 +175,7 @@ const Index = () => {
           plates: editingEntry.plates,
           sugarTongs: editingEntry.sugar_tongs,
           iceTongs: editingEntry.ice_tongs,
+          ashtrays: editingEntry.ashtrays,
           responsible_name: editingEntry.responsible_name,
           responsible_date: editingEntry.responsible_date,
         }),
@@ -262,6 +266,7 @@ const Index = () => {
           'Тарелки': portEntry.plates,
           'Щипцы (сахар)': portEntry.sugar_tongs,
           'Щипцы (лед)': portEntry.ice_tongs,
+          'Пепельницы': portEntry.ashtrays,
         });
       }
 
@@ -278,6 +283,7 @@ const Index = () => {
           'Тарелки': dickensEntry.plates,
           'Щипцы (сахар)': dickensEntry.sugar_tongs,
           'Щипцы (лед)': dickensEntry.ice_tongs,
+          'Пепельницы': dickensEntry.ashtrays,
         });
       }
 
@@ -291,6 +297,7 @@ const Index = () => {
         const totalPlates = (portEntry?.plates || 0) + (dickensEntry?.plates || 0);
         const totalSugarTongs = (portEntry?.sugar_tongs || 0) + (dickensEntry?.sugar_tongs || 0);
         const totalIceTongs = (portEntry?.ice_tongs || 0) + (dickensEntry?.ice_tongs || 0);
+        const totalAshtrays = (portEntry?.ashtrays || 0) + (dickensEntry?.ashtrays || 0);
 
         allData.push({
           'Дата': date,
@@ -304,6 +311,7 @@ const Index = () => {
           'Тарелки': totalPlates,
           'Щипцы (сахар)': totalSugarTongs,
           'Щипцы (лед)': totalIceTongs,
+          'Пепельницы': totalAshtrays,
         });
       }
     });
@@ -314,7 +322,7 @@ const Index = () => {
 
     const colWidths = [
       { wch: 12 }, { wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, 
-      { wch: 10 }, { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 12 }
+      { wch: 10 }, { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 12 }
     ];
     ws['!cols'] = colWidths;
 
@@ -386,6 +394,11 @@ const Index = () => {
         name: 'Тарелки',
         PORT: portEntries.reduce((sum, e) => sum + e.plates, 0),
         Диккенс: dickensEntries.reduce((sum, e) => sum + e.plates, 0),
+      },
+      {
+        name: 'Пепельницы',
+        PORT: portEntries.reduce((sum, e) => sum + e.ashtrays, 0),
+        Диккенс: dickensEntries.reduce((sum, e) => sum + e.ashtrays, 0),
       },
     ];
   };
