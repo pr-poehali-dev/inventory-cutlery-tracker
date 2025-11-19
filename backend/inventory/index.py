@@ -12,7 +12,15 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 def get_db_connection():
-    return psycopg2.connect(os.environ['DATABASE_URL'])
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    conn.set_session(autocommit=True)
+    return conn
+
+def escape_sql_string(value):
+    """Экранирование строк для SQL"""
+    if value is None:
+        return 'NULL'
+    return "'" + str(value).replace("'", "''") + "'"
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
@@ -38,17 +46,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             conn = get_db_connection()
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
-            cur.execute('''
+            query = f'''
                 SELECT id, venue, entry_date::text as date, 
                        forks, knives, steak_knives, spoons, dessert_spoons,
                        ice_cooler, plates, sugar_tongs, ice_tongs, ashtrays,
                        responsible_name, responsible_date::text,
                        created_at::text
                 FROM t_p23128842_inventory_cutlery_tr.inventory_entries
-                WHERE venue = %s
+                WHERE venue = {escape_sql_string(venue)}
                 ORDER BY entry_date DESC
-            ''', (venue,))
+            '''
             
+            cur.execute(query)
             entries = cur.fetchall()
             cur.close()
             conn.close()
@@ -69,35 +78,35 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             conn = get_db_connection()
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
-            cur.execute('''
+            query = f'''
                 INSERT INTO t_p23128842_inventory_cutlery_tr.inventory_entries
                 (venue, entry_date, forks, knives, steak_knives, spoons, 
                  dessert_spoons, ice_cooler, plates, sugar_tongs, ice_tongs, ashtrays,
                  responsible_name, responsible_date)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (
+                    {escape_sql_string(body_data['venue'])},
+                    {escape_sql_string(body_data['date'])},
+                    {body_data['forks']},
+                    {body_data['knives']},
+                    {body_data['steakKnives']},
+                    {body_data['spoons']},
+                    {body_data['dessertSpoons']},
+                    {body_data['iceCooler']},
+                    {body_data['plates']},
+                    {body_data['sugarTongs']},
+                    {body_data['iceTongs']},
+                    {body_data.get('ashtrays', 0)},
+                    {escape_sql_string(body_data.get('responsible_name'))},
+                    {escape_sql_string(body_data.get('responsible_date'))}
+                )
                 RETURNING id, venue, entry_date::text as date, 
                           forks, knives, steak_knives, spoons, dessert_spoons,
                           ice_cooler, plates, sugar_tongs, ice_tongs, ashtrays,
                           responsible_name, responsible_date::text
-            ''', (
-                body_data['venue'],
-                body_data['date'],
-                body_data['forks'],
-                body_data['knives'],
-                body_data['steakKnives'],
-                body_data['spoons'],
-                body_data['dessertSpoons'],
-                body_data['iceCooler'],
-                body_data['plates'],
-                body_data['sugarTongs'],
-                body_data['iceTongs'],
-                body_data.get('ashtrays', 0),
-                body_data.get('responsible_name'),
-                body_data.get('responsible_date')
-            ))
+            '''
             
+            cur.execute(query)
             new_entry = cur.fetchone()
-            conn.commit()
             cur.close()
             conn.close()
             
@@ -129,37 +138,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             conn = get_db_connection()
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
-            cur.execute('''
+            query = f'''
                 UPDATE t_p23128842_inventory_cutlery_tr.inventory_entries
-                SET venue = %s, entry_date = %s, forks = %s, knives = %s, 
-                    steak_knives = %s, spoons = %s, dessert_spoons = %s, 
-                    ice_cooler = %s, plates = %s, sugar_tongs = %s, ice_tongs = %s, ashtrays = %s,
-                    responsible_name = %s, responsible_date = %s
-                WHERE id = %s
+                SET venue = {escape_sql_string(body_data['venue'])},
+                    entry_date = {escape_sql_string(body_data['date'])},
+                    forks = {body_data['forks']},
+                    knives = {body_data['knives']},
+                    steak_knives = {body_data['steakKnives']},
+                    spoons = {body_data['spoons']},
+                    dessert_spoons = {body_data['dessertSpoons']},
+                    ice_cooler = {body_data['iceCooler']},
+                    plates = {body_data['plates']},
+                    sugar_tongs = {body_data['sugarTongs']},
+                    ice_tongs = {body_data['iceTongs']},
+                    ashtrays = {body_data.get('ashtrays', 0)},
+                    responsible_name = {escape_sql_string(body_data.get('responsible_name'))},
+                    responsible_date = {escape_sql_string(body_data.get('responsible_date'))}
+                WHERE id = {entry_id}
                 RETURNING id, venue, entry_date::text as date, 
                           forks, knives, steak_knives, spoons, dessert_spoons,
                           ice_cooler, plates, sugar_tongs, ice_tongs, ashtrays,
                           responsible_name, responsible_date::text
-            ''', (
-                body_data['venue'],
-                body_data['date'],
-                body_data['forks'],
-                body_data['knives'],
-                body_data['steakKnives'],
-                body_data['spoons'],
-                body_data['dessertSpoons'],
-                body_data['iceCooler'],
-                body_data['plates'],
-                body_data['sugarTongs'],
-                body_data['iceTongs'],
-                body_data.get('ashtrays', 0),
-                body_data.get('responsible_name'),
-                body_data.get('responsible_date'),
-                entry_id
-            ))
+            '''
             
+            cur.execute(query)
             updated_entry = cur.fetchone()
-            conn.commit()
             cur.close()
             conn.close()
             
@@ -191,12 +194,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             conn = get_db_connection()
             cur = conn.cursor()
             
-            cur.execute('''
+            query = f'''
                 DELETE FROM t_p23128842_inventory_cutlery_tr.inventory_entries
-                WHERE id = %s
-            ''', (entry_id,))
+                WHERE id = {entry_id}
+            '''
             
-            conn.commit()
+            cur.execute(query)
             cur.close()
             conn.close()
             
