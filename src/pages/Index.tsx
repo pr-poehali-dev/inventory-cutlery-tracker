@@ -435,6 +435,23 @@ const Index = () => {
     return <SplashScreen onComplete={handleSplashComplete} />;
   }
 
+  if (loading) {
+    return (
+      <div className={`min-h-screen ${bgGradient} flex items-center justify-center`}>
+        <div className="text-center space-y-6">
+          <div className="relative">
+            <div className={`w-20 h-20 mx-auto rounded-full ${colors.primary} animate-pulse`}></div>
+            <div className={`absolute inset-0 w-20 h-20 mx-auto rounded-full ${colors.primary} opacity-50 animate-ping`}></div>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-stone-900">Загрузка данных...</h2>
+            <p className="text-stone-600">Подключение к базе данных</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen ${bgGradient} transition-all duration-500`}>
       <InventoryHeader
