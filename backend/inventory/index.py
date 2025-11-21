@@ -12,9 +12,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 def get_db_connection():
-    conn = psycopg2.connect(os.environ['DATABASE_URL'])
-    conn.set_session(autocommit=True)
-    return conn
+    return psycopg2.connect(os.environ['DATABASE_URL'])
 
 def escape_sql_string(value):
     """Экранирование строк для SQL"""
@@ -107,6 +105,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             cur.execute(query)
             new_entry = cur.fetchone()
+            conn.commit()
             cur.close()
             conn.close()
             
@@ -163,6 +162,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             cur.execute(query)
             updated_entry = cur.fetchone()
+            conn.commit()
             cur.close()
             conn.close()
             
@@ -200,6 +200,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             '''
             
             cur.execute(query)
+            conn.commit()
             cur.close()
             conn.close()
             
