@@ -12,6 +12,7 @@ import { ResponsibleTab } from '@/components/inventory/ResponsibleTab';
 import { EditDialog } from '@/components/inventory/EditDialog';
 import { SplashScreen } from '@/components/SplashScreen';
 import Icon from '@/components/ui/icon';
+import { storageManager, StorageMode } from '@/utils/storageManager';
 
 const Index = () => {
   const [showSplash, setShowSplash] = useState(() => {
@@ -27,6 +28,7 @@ const Index = () => {
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [editingEntry, setEditingEntry] = useState<InventoryEntry | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [storageMode, setStorageMode] = useState<StorageMode>(storageManager.getMode());
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -90,28 +92,71 @@ const Index = () => {
     try {
       setLoading(true);
       
-      const portResponse = await fetch(`${API_URL}?venue=PORT`);
-      const dickensResponse = await fetch(`${API_URL}?venue=${encodeURIComponent('Диккенс')}`);
-      
-      if (!portResponse.ok || !dickensResponse.ok) {
-        throw new Error('API Error');
-      }
-      
-      const portData = await portResponse.json();
-      const dickensData = await dickensResponse.json();
-      
-      setPortEntries(portData.entries || []);
-      setDickensEntries(dickensData.entries || []);
-      
-      if (currentVenue === 'PORT') {
-        setEntries(portData.entries || []);
+      if (storageMode === 'api') {
+        try {
+          const portResponse = await fetch(`${API_URL}?venue=PORT`);
+          const dickensResponse = await fetch(`${API_URL}?venue=${encodeURIComponent('Диккенс')}`);
+          
+          if (portResponse.status === 402 || dickensResponse.status === 402) {
+            throw new Error('Payment Required - switching to local mode');
+          }
+          
+          if (!portResponse.ok || !dickensResponse.ok) {
+            throw new Error('API Error');
+          }
+          
+          const portData = await portResponse.json();
+          const dickensData = await dickensResponse.json();
+          
+          setPortEntries(portData.entries || []);
+          setDickensEntries(dickensData.entries || []);
+          
+          storageManager.syncFromAPI(portData.entries || [], dickensData.entries || []);
+          
+          if (currentVenue === 'PORT') {
+            setEntries(portData.entries || []);
+          } else {
+            setEntries(dickensData.entries || []);
+          }
+          
+          toast.success(`✅ Загружено ${(portData.entries || []).length + (dickensData.entries || []).length} записей`);
+        } catch (apiError: any) {
+          console.warn('API недоступен, переключаюсь на локальный режим');
+          setStorageMode('local');
+          storageManager.setMode('local');
+          toast.warning('⚠️ API недоступен. Работаем с локальными данными', {
+            description: 'Загрузите бэкап для восстановления данных',
+          });
+          
+          const portData = storageManager.getEntriesByVenue('PORT');
+          const dickensData = storageManager.getEntriesByVenue('Диккенс');
+          
+          setPortEntries(portData);
+          setDickensEntries(dickensData);
+          
+          if (currentVenue === 'PORT') {
+            setEntries(portData);
+          } else {
+            setEntries(dickensData);
+          }
+        }
       } else {
-        setEntries(dickensData.entries || []);
+        const portData = storageManager.getEntriesByVenue('PORT');
+        const dickensData = storageManager.getEntriesByVenue('Диккенс');
+        
+        setPortEntries(portData);
+        setDickensEntries(dickensData);
+        
+        if (currentVenue === 'PORT') {
+          setEntries(portData);
+        } else {
+          setEntries(dickensData);
+        }
+        
+        toast.success(`✅ Загружено ${portData.length + dickensData.length} записей (локально)`);
       }
-      
-      toast.success(`✅ Загружено ${(portData.entries || []).length + (dickensData.entries || []).length} записей`);
     } catch (error) {
-      console.error('Fetch error:', error);
+      console.error('Load error:', error);
       toast.error('Ошибка загрузки данных');
       setPortEntries([]);
       setDickensEntries([]);
@@ -127,46 +172,65 @@ const Index = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      if (storageMode === 'api') {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            venue: currentVenue,
+            date: formData.date,
+            forks: Number(formData.forks) || 0,
+            knives: Number(formData.knives) || 0,
+            steakKnives: Number(formData.steakKnives) || 0,
+            spoons: Number(formData.spoons) || 0,
+            dessertSpoons: Number(formData.dessertSpoons) || 0,
+            iceCooler: Number(formData.iceCooler) || 0,
+            plates: Number(formData.plates) || 0,
+            sugarTongs: Number(formData.sugarTongs) || 0,
+            iceTongs: Number(formData.iceTongs) || 0,
+            ashtrays: Number(formData.ashtrays) || 0,
+            responsible_name: formData.responsible_name,
+            responsible_date: formData.responsible_date,
+          }),
+        });
+
+        if (!response.ok) throw new Error('API Error');
+      } else {
+        storageManager.addEntry({
           venue: currentVenue,
           date: formData.date,
           forks: Number(formData.forks) || 0,
           knives: Number(formData.knives) || 0,
-          steakKnives: Number(formData.steakKnives) || 0,
+          steak_knives: Number(formData.steakKnives) || 0,
           spoons: Number(formData.spoons) || 0,
-          dessertSpoons: Number(formData.dessertSpoons) || 0,
-          iceCooler: Number(formData.iceCooler) || 0,
+          dessert_spoons: Number(formData.dessertSpoons) || 0,
+          ice_cooler: Number(formData.iceCooler) || 0,
           plates: Number(formData.plates) || 0,
-          sugarTongs: Number(formData.sugarTongs) || 0,
-          iceTongs: Number(formData.iceTongs) || 0,
+          sugar_tongs: Number(formData.sugarTongs) || 0,
+          ice_tongs: Number(formData.iceTongs) || 0,
           ashtrays: Number(formData.ashtrays) || 0,
           responsible_name: formData.responsible_name,
           responsible_date: formData.responsible_date,
-        }),
-      });
-
-      if (response.ok) {
-        setFormData({
-          date: new Date().toISOString().split('T')[0],
-          forks: '',
-          knives: '',
-          steakKnives: '',
-          spoons: '',
-          dessertSpoons: '',
-          iceCooler: '',
-          plates: '',
-          sugarTongs: '',
-          iceTongs: '',
-          ashtrays: '',
-          responsible_name: '',
-          responsible_date: new Date().toISOString().split('T')[0],
         });
-        await loadAllData();
-        toast.success('Запись добавлена успешно');
       }
+
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        forks: '',
+        knives: '',
+        steakKnives: '',
+        spoons: '',
+        dessertSpoons: '',
+        iceCooler: '',
+        plates: '',
+        sugarTongs: '',
+        iceTongs: '',
+        ashtrays: '',
+        responsible_name: '',
+        responsible_date: new Date().toISOString().split('T')[0],
+      });
+      await loadAllData();
+      toast.success('Запись добавлена успешно');
     } catch (error) {
       toast.error('Ошибка при добавлении записи');
       console.error(error);
@@ -182,34 +246,38 @@ const Index = () => {
     if (!editingEntry) return;
 
     try {
-      const response = await fetch(API_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: editingEntry.id,
-          venue: editingEntry.venue,
-          date: editingEntry.date,
-          forks: editingEntry.forks,
-          knives: editingEntry.knives,
-          steakKnives: editingEntry.steak_knives,
-          spoons: editingEntry.spoons,
-          dessertSpoons: editingEntry.dessert_spoons,
-          iceCooler: editingEntry.ice_cooler,
-          plates: editingEntry.plates,
-          sugarTongs: editingEntry.sugar_tongs,
-          iceTongs: editingEntry.ice_tongs,
-          ashtrays: editingEntry.ashtrays,
-          responsible_name: editingEntry.responsible_name,
-          responsible_date: editingEntry.responsible_date,
-        }),
-      });
+      if (storageMode === 'api') {
+        const response = await fetch(API_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingEntry.id,
+            venue: editingEntry.venue,
+            date: editingEntry.date,
+            forks: editingEntry.forks,
+            knives: editingEntry.knives,
+            steakKnives: editingEntry.steak_knives,
+            spoons: editingEntry.spoons,
+            dessertSpoons: editingEntry.dessert_spoons,
+            iceCooler: editingEntry.ice_cooler,
+            plates: editingEntry.plates,
+            sugarTongs: editingEntry.sugar_tongs,
+            iceTongs: editingEntry.ice_tongs,
+            ashtrays: editingEntry.ashtrays,
+            responsible_name: editingEntry.responsible_name,
+            responsible_date: editingEntry.responsible_date,
+          }),
+        });
 
-      if (response.ok) {
-        await loadAllData();
-        setIsEditDialogOpen(false);
-        setEditingEntry(null);
-        toast.success('Запись обновлена');
+        if (!response.ok) throw new Error('API Error');
+      } else {
+        storageManager.updateEntry(editingEntry.id, editingEntry);
       }
+
+      await loadAllData();
+      setIsEditDialogOpen(false);
+      setEditingEntry(null);
+      toast.success('Запись обновлена');
     } catch (error) {
       toast.error('Ошибка при обновлении');
       console.error(error);
@@ -220,14 +288,18 @@ const Index = () => {
     if (!confirm('Удалить эту запись?')) return;
 
     try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
-        method: 'DELETE',
-      });
+      if (storageMode === 'api') {
+        const response = await fetch(`${API_URL}?id=${id}`, {
+          method: 'DELETE',
+        });
 
-      if (response.ok) {
-        await loadAllData();
-        toast.success('Запись удалена');
+        if (!response.ok) throw new Error('API Error');
+      } else {
+        storageManager.deleteEntry(id);
       }
+
+      await loadAllData();
+      toast.success('Запись удалена');
     } catch (error) {
       toast.error('Ошибка при удалении');
       console.error(error);
@@ -357,26 +429,80 @@ const Index = () => {
 
   const exportBackup = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/035aee39-78b7-4c55-9b8c-48bfe3133352');
-      const data = await response.json();
-      
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `inventory_backup_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-      toast.success('💾 Бэкап базы данных скачан!', {
-        description: `${data.total_records} записей сохранено`,
-      });
+      if (storageMode === 'api') {
+        const response = await fetch('https://functions.poehali.dev/035aee39-78b7-4c55-9b8c-48bfe3133352');
+        const data = await response.json();
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `inventory_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        toast.success('💾 Бэкап базы данных скачан!', {
+          description: `${data.total_records} записей сохранено`,
+        });
+      } else {
+        const allEntries = storageManager.getAllEntries();
+        const backupData = {
+          backup_date: new Date().toISOString(),
+          total_records: allEntries.length,
+          version: '1.0',
+          entries: allEntries,
+        };
+        
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `inventory_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        toast.success('💾 Бэкап локальных данных скачан!', {
+          description: `${allEntries.length} записей сохранено`,
+        });
+      }
     } catch (error) {
       toast.error('Ошибка при создании бэкапа');
       console.error(error);
     }
+  };
+
+  const importBackup = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e: any) => {
+      try {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        if (!data.entries || !Array.isArray(data.entries)) {
+          throw new Error('Неверный формат файла');
+        }
+        
+        storageManager.importData(data.entries);
+        await loadAllData();
+        
+        toast.success('✅ Бэкап импортирован!', {
+          description: `Восстановлено ${data.entries.length} записей`,
+        });
+      } catch (error) {
+        toast.error('Ошибка при импорте бэкапа');
+        console.error(error);
+      }
+    };
+    input.click();
   };
 
   const getChartData = () => {
@@ -477,6 +603,25 @@ const Index = () => {
 
   return (
     <div className={`min-h-screen ${bgGradient} transition-all duration-500`}>
+      {storageMode === 'local' && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2">
+          <div className="container mx-auto flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2 text-amber-800">
+              <Icon name="WifiOff" size={16} />
+              <span className="font-medium">Локальный режим</span>
+              <span className="text-xs">• API недоступен</span>
+            </div>
+            <button
+              onClick={importBackup}
+              className="flex items-center gap-1 px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
+            >
+              <Icon name="Upload" size={14} />
+              Импорт бэкапа
+            </button>
+          </div>
+        </div>
+      )}
+      
       <InventoryHeader
         currentVenue={currentVenue}
         colors={colors}
