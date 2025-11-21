@@ -52,7 +52,22 @@ const Index = () => {
   };
 
   useEffect(() => {
-    loadAllData();
+    const loadWithRetry = async (retries = 3) => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          await loadAllData();
+          return;
+        } catch (error) {
+          if (i === retries - 1) {
+            console.error('All retry attempts failed');
+          } else {
+            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+          }
+        }
+      }
+    };
+    
+    loadWithRetry();
   }, []);
 
   useEffect(() => {
@@ -74,10 +89,28 @@ const Index = () => {
   const loadAllData = async () => {
     try {
       setLoading(true);
-      const [portResponse, dickensResponse] = await Promise.all([
-        fetch(`${API_URL}?venue=PORT`),
-        fetch(`${API_URL}?venue=Диккенс`)
-      ]);
+      
+      const portResponse = await fetch(`${API_URL}?venue=PORT`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!portResponse.ok) {
+        throw new Error(`HTTP error PORT: ${portResponse.status}`);
+      }
+      
+      const dickensResponse = await fetch(`${API_URL}?venue=Диккенс`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!dickensResponse.ok) {
+        throw new Error(`HTTP error Диккенс: ${dickensResponse.status}`);
+      }
       
       const portData = await portResponse.json();
       const dickensData = await dickensResponse.json();
@@ -90,9 +123,16 @@ const Index = () => {
       } else {
         setEntries(dickensData.entries || []);
       }
+      
+      toast.success(`✅ Загружено ${(portData.entries || []).length + (dickensData.entries || []).length} записей`);
     } catch (error) {
-      toast.error('Ошибка загрузки данных');
-      console.error(error);
+      console.error('Fetch error:', error);
+      toast.error('Ошибка загрузки данных', {
+        description: 'Попробуйте обновить страницу',
+      });
+      setPortEntries([]);
+      setDickensEntries([]);
+      setEntries([]);
     } finally {
       setLoading(false);
     }
