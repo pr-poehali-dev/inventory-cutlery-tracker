@@ -92,6 +92,7 @@ const Index = () => {
       
       const portResponse = await fetch(`${API_URL}?venue=PORT`, {
         method: 'GET',
+        mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -103,6 +104,7 @@ const Index = () => {
       
       const dickensResponse = await fetch(`${API_URL}?venue=Диккенс`, {
         method: 'GET',
+        mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -146,6 +148,7 @@ const Index = () => {
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
+        mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           venue: currentVenue,
@@ -201,6 +204,7 @@ const Index = () => {
     try {
       const response = await fetch(API_URL, {
         method: 'PUT',
+        mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingEntry.id,
@@ -239,6 +243,7 @@ const Index = () => {
     try {
       const response = await fetch(`${API_URL}?id=${id}`, {
         method: 'DELETE',
+        mode: 'cors',
       });
 
       if (response.ok) {
@@ -374,7 +379,9 @@ const Index = () => {
 
   const exportBackup = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/035aee39-78b7-4c55-9b8c-48bfe3133352');
+      const response = await fetch('https://functions.poehali.dev/035aee39-78b7-4c55-9b8c-48bfe3133352', {
+        mode: 'cors',
+      });
       const data = await response.json();
       
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
