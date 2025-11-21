@@ -7,9 +7,10 @@ interface InventoryHeaderProps {
   colors: ColorScheme;
   onVenueChange: (venue: 'PORT' | 'Диккенс') => void;
   onExportExcel: () => void;
+  onExportBackup: () => void;
 }
 
-export const InventoryHeader = ({ currentVenue, colors, onVenueChange, onExportExcel }: InventoryHeaderProps) => {
+export const InventoryHeader = ({ currentVenue, colors, onVenueChange, onExportExcel, onExportBackup }: InventoryHeaderProps) => {
   return (
     <header className="border-b border-stone-200/50 bg-white/98 backdrop-blur-xl shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -57,6 +58,15 @@ export const InventoryHeader = ({ currentVenue, colors, onVenueChange, onExportE
               <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
               <Icon name="FileSpreadsheet" size={18} className="mr-2 relative z-10" />
               <span className="relative z-10">Скачать Excel</span>
+            </Button>
+
+            <Button 
+              onClick={onExportBackup} 
+              variant="outline"
+              className="shadow-lg font-bold px-6 py-3 text-base hover:scale-105 transition-transform border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+            >
+              <Icon name="Database" size={18} className="mr-2" />
+              <span>Бэкап БД</span>
             </Button>
           </div>
         </div>

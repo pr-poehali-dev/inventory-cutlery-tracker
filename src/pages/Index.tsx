@@ -332,6 +332,30 @@ const Index = () => {
     });
   };
 
+  const exportBackup = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/035aee39-78b7-4c55-9b8c-48bfe3133352');
+      const data = await response.json();
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `inventory_backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('💾 Бэкап базы данных скачан!', {
+        description: `${data.total_records} записей сохранено`,
+      });
+    } catch (error) {
+      toast.error('Ошибка при создании бэкапа');
+      console.error(error);
+    }
+  };
+
   const getChartData = () => {
     return [...entries]
       .reverse()
@@ -418,6 +442,7 @@ const Index = () => {
         colors={colors}
         onVenueChange={setCurrentVenue}
         onExportExcel={exportToExcel}
+        onExportBackup={exportBackup}
       />
 
       <main className="container mx-auto px-4 py-8">
