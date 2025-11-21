@@ -9,7 +9,6 @@ import json
 import os
 from typing import Dict, Any, List
 import psycopg2
-from psycopg2.extras import RealDictCursor
 
 def get_db_connection():
     return psycopg2.connect(os.environ['DATABASE_URL'])
@@ -42,7 +41,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             venue = params.get('venue', 'PORT')
             
             conn = get_db_connection()
-            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur = conn.cursor()
             
             query = f'''
                 SELECT id, venue, entry_date::text as date, 
@@ -56,7 +55,29 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             '''
             
             cur.execute(query)
-            entries = cur.fetchall()
+            rows = cur.fetchall()
+            
+            entries = []
+            for row in rows:
+                entries.append({
+                    'id': row[0],
+                    'venue': row[1],
+                    'date': row[2],
+                    'forks': row[3],
+                    'knives': row[4],
+                    'steak_knives': row[5],
+                    'spoons': row[6],
+                    'dessert_spoons': row[7],
+                    'ice_cooler': row[8],
+                    'plates': row[9],
+                    'sugar_tongs': row[10],
+                    'ice_tongs': row[11],
+                    'ashtrays': row[12],
+                    'responsible_name': row[13],
+                    'responsible_date': row[14],
+                    'created_at': row[15]
+                })
+            
             cur.close()
             conn.close()
             
@@ -66,7 +87,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'entries': [dict(row) for row in entries]}),
+                'body': json.dumps({'entries': entries}),
                 'isBase64Encoded': False
             }
         
@@ -74,7 +95,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body_data = json.loads(event.get('body', '{}'))
             
             conn = get_db_connection()
-            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur = conn.cursor()
             
             query = f'''
                 INSERT INTO t_p23128842_inventory_cutlery_tr.inventory_entries
@@ -104,7 +125,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             '''
             
             cur.execute(query)
-            new_entry = cur.fetchone()
+            row = cur.fetchone()
+            new_entry = {
+                'id': row[0],
+                'venue': row[1],
+                'date': row[2],
+                'forks': row[3],
+                'knives': row[4],
+                'steak_knives': row[5],
+                'spoons': row[6],
+                'dessert_spoons': row[7],
+                'ice_cooler': row[8],
+                'plates': row[9],
+                'sugar_tongs': row[10],
+                'ice_tongs': row[11],
+                'ashtrays': row[12],
+                'responsible_name': row[13],
+                'responsible_date': row[14]
+            }
             conn.commit()
             cur.close()
             conn.close()
@@ -115,7 +153,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'entry': dict(new_entry)}),
+                'body': json.dumps({'entry': new_entry}),
                 'isBase64Encoded': False
             }
         
@@ -135,7 +173,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             conn = get_db_connection()
-            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur = conn.cursor()
             
             query = f'''
                 UPDATE t_p23128842_inventory_cutlery_tr.inventory_entries
@@ -161,7 +199,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             '''
             
             cur.execute(query)
-            updated_entry = cur.fetchone()
+            row = cur.fetchone()
+            updated_entry = None
+            if row:
+                updated_entry = {
+                    'id': row[0],
+                    'venue': row[1],
+                    'date': row[2],
+                    'forks': row[3],
+                    'knives': row[4],
+                    'steak_knives': row[5],
+                    'spoons': row[6],
+                    'dessert_spoons': row[7],
+                    'ice_cooler': row[8],
+                    'plates': row[9],
+                    'sugar_tongs': row[10],
+                    'ice_tongs': row[11],
+                    'ashtrays': row[12],
+                    'responsible_name': row[13],
+                    'responsible_date': row[14]
+                }
             conn.commit()
             cur.close()
             conn.close()
@@ -172,7 +229,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'entry': dict(updated_entry) if updated_entry else None}),
+                'body': json.dumps({'entry': updated_entry}),
                 'isBase64Encoded': False
             }
         
