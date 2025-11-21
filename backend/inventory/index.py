@@ -11,7 +11,9 @@ from typing import Dict, Any, List
 import psycopg2
 
 def get_db_connection():
-    return psycopg2.connect(os.environ['DATABASE_URL'])
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    conn.autocommit = True
+    return conn
 
 def escape_sql_string(value):
     """Экранирование строк для SQL"""
@@ -143,7 +145,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'responsible_name': row[13],
                 'responsible_date': row[14]
             }
-            conn.commit()
             cur.close()
             conn.close()
             
@@ -219,7 +220,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'responsible_name': row[13],
                     'responsible_date': row[14]
                 }
-            conn.commit()
             cur.close()
             conn.close()
             
@@ -257,7 +257,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             '''
             
             cur.execute(query)
-            conn.commit()
             cur.close()
             conn.close()
             
