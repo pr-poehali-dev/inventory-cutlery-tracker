@@ -90,20 +90,47 @@ const Index = () => {
     try {
       setLoading(true);
       
-      const portResponse = await fetch(`${API_URL}?venue=PORT`);
+      const portUrl = `${API_URL}?venue=PORT`;
+      const dickensUrl = `${API_URL}?venue=${encodeURIComponent('Диккенс')}`;
+      
+      console.log('Loading PORT from:', portUrl);
+      console.log('Loading Диккенс from:', dickensUrl);
+      
+      const portResponse = await fetch(portUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      console.log('PORT response status:', portResponse.status);
       
       if (!portResponse.ok) {
+        const errorText = await portResponse.text();
+        console.error('PORT error response:', errorText);
         throw new Error(`HTTP error PORT: ${portResponse.status}`);
       }
       
-      const dickensResponse = await fetch(`${API_URL}?venue=Диккенс`);
+      const dickensResponse = await fetch(dickensUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      console.log('Диккенс response status:', dickensResponse.status);
       
       if (!dickensResponse.ok) {
+        const errorText = await dickensResponse.text();
+        console.error('Диккенс error response:', errorText);
         throw new Error(`HTTP error Диккенс: ${dickensResponse.status}`);
       }
       
       const portData = await portResponse.json();
       const dickensData = await dickensResponse.json();
+      
+      console.log('PORT data:', portData);
+      console.log('Диккенс data:', dickensData);
       
       setPortEntries(portData.entries || []);
       setDickensEntries(dickensData.entries || []);
@@ -118,7 +145,7 @@ const Index = () => {
     } catch (error) {
       console.error('Fetch error:', error);
       toast.error('Ошибка загрузки данных', {
-        description: 'Попробуйте обновить страницу',
+        description: 'Откройте консоль (F12) для деталей',
       });
       setPortEntries([]);
       setDickensEntries([]);
