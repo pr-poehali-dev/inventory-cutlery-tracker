@@ -90,25 +90,13 @@ const Index = () => {
     try {
       setLoading(true);
       
-      const portResponse = await fetch(`${API_URL}?venue=PORT`, {
-        method: 'GET',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const portResponse = await fetch(`${API_URL}?venue=PORT`);
       
       if (!portResponse.ok) {
         throw new Error(`HTTP error PORT: ${portResponse.status}`);
       }
       
-      const dickensResponse = await fetch(`${API_URL}?venue=Диккенс`, {
-        method: 'GET',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const dickensResponse = await fetch(`${API_URL}?venue=Диккенс`);
       
       if (!dickensResponse.ok) {
         throw new Error(`HTTP error Диккенс: ${dickensResponse.status}`);
