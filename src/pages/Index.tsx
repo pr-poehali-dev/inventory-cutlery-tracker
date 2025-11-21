@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
-import { InventoryEntry, portColors, dickensColors, API_URL } from '@/types/inventory';
+import { InventoryEntry, portColors, dickensColors } from '@/types/inventory';
 import { InventoryHeader } from '@/components/inventory/InventoryHeader';
 import { InventoryForm } from '@/components/inventory/InventoryForm';
 import { InventoryTable } from '@/components/inventory/InventoryTable';
@@ -12,6 +12,7 @@ import { ResponsibleTab } from '@/components/inventory/ResponsibleTab';
 import { EditDialog } from '@/components/inventory/EditDialog';
 import { SplashScreen } from '@/components/SplashScreen';
 import Icon from '@/components/ui/icon';
+import { localStorageApi } from '@/utils/localStorageApi';
 
 const Index = () => {
   const [showSplash, setShowSplash] = useState(() => {
@@ -90,63 +91,22 @@ const Index = () => {
     try {
       setLoading(true);
       
-      const portUrl = `${API_URL}?venue=PORT`;
-      const dickensUrl = `${API_URL}?venue=${encodeURIComponent('Диккенс')}`;
+      const portData = localStorageApi.getEntriesByVenue('PORT');
+      const dickensData = localStorageApi.getEntriesByVenue('Диккенс');
       
-      console.log('Loading PORT from:', portUrl);
-      console.log('Loading Диккенс from:', dickensUrl);
-      
-      const portResponse = await fetch(portUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-      
-      console.log('PORT response status:', portResponse.status);
-      
-      if (!portResponse.ok) {
-        const errorText = await portResponse.text();
-        console.error('PORT error response:', errorText);
-        throw new Error(`HTTP error PORT: ${portResponse.status}`);
-      }
-      
-      const dickensResponse = await fetch(dickensUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-      
-      console.log('Диккенс response status:', dickensResponse.status);
-      
-      if (!dickensResponse.ok) {
-        const errorText = await dickensResponse.text();
-        console.error('Диккенс error response:', errorText);
-        throw new Error(`HTTP error Диккенс: ${dickensResponse.status}`);
-      }
-      
-      const portData = await portResponse.json();
-      const dickensData = await dickensResponse.json();
-      
-      console.log('PORT data:', portData);
-      console.log('Диккенс data:', dickensData);
-      
-      setPortEntries(portData.entries || []);
-      setDickensEntries(dickensData.entries || []);
+      setPortEntries(portData);
+      setDickensEntries(dickensData);
       
       if (currentVenue === 'PORT') {
-        setEntries(portData.entries || []);
+        setEntries(portData);
       } else {
-        setEntries(dickensData.entries || []);
+        setEntries(dickensData);
       }
       
-      toast.success(`✅ Загружено ${(portData.entries || []).length + (dickensData.entries || []).length} записей`);
+      toast.success(`✅ Загружено ${portData.length + dickensData.length} записей (автономный режим)`);
     } catch (error) {
-      console.error('Fetch error:', error);
-      toast.error('Ошибка загрузки данных', {
-        description: 'Откройте консоль (F12) для деталей',
-      });
+      console.error('LocalStorage error:', error);
+      toast.error('Ошибка загрузки данных');
       setPortEntries([]);
       setDickensEntries([]);
       setEntries([]);
@@ -161,47 +121,40 @@ const Index = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          venue: currentVenue,
-          date: formData.date,
-          forks: Number(formData.forks) || 0,
-          knives: Number(formData.knives) || 0,
-          steakKnives: Number(formData.steakKnives) || 0,
-          spoons: Number(formData.spoons) || 0,
-          dessertSpoons: Number(formData.dessertSpoons) || 0,
-          iceCooler: Number(formData.iceCooler) || 0,
-          plates: Number(formData.plates) || 0,
-          sugarTongs: Number(formData.sugarTongs) || 0,
-          iceTongs: Number(formData.iceTongs) || 0,
-          ashtrays: Number(formData.ashtrays) || 0,
-          responsible_name: formData.responsible_name,
-          responsible_date: formData.responsible_date,
-        }),
+      localStorageApi.addEntry({
+        venue: currentVenue,
+        date: formData.date,
+        forks: Number(formData.forks) || 0,
+        knives: Number(formData.knives) || 0,
+        steak_knives: Number(formData.steakKnives) || 0,
+        spoons: Number(formData.spoons) || 0,
+        dessert_spoons: Number(formData.dessertSpoons) || 0,
+        ice_cooler: Number(formData.iceCooler) || 0,
+        plates: Number(formData.plates) || 0,
+        sugar_tongs: Number(formData.sugarTongs) || 0,
+        ice_tongs: Number(formData.iceTongs) || 0,
+        ashtrays: Number(formData.ashtrays) || 0,
+        responsible_name: formData.responsible_name,
+        responsible_date: formData.responsible_date,
       });
 
-      if (response.ok) {
-        setFormData({
-          date: new Date().toISOString().split('T')[0],
-          forks: '',
-          knives: '',
-          steakKnives: '',
-          spoons: '',
-          dessertSpoons: '',
-          iceCooler: '',
-          plates: '',
-          sugarTongs: '',
-          iceTongs: '',
-          ashtrays: '',
-          responsible_name: '',
-          responsible_date: new Date().toISOString().split('T')[0],
-        });
-        await loadAllData();
-        toast.success('Запись добавлена успешно');
-      }
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        forks: '',
+        knives: '',
+        steakKnives: '',
+        spoons: '',
+        dessertSpoons: '',
+        iceCooler: '',
+        plates: '',
+        sugarTongs: '',
+        iceTongs: '',
+        ashtrays: '',
+        responsible_name: '',
+        responsible_date: new Date().toISOString().split('T')[0],
+      });
+      await loadAllData();
+      toast.success('Запись добавлена успешно');
     } catch (error) {
       toast.error('Ошибка при добавлении записи');
       console.error(error);
@@ -217,35 +170,11 @@ const Index = () => {
     if (!editingEntry) return;
 
     try {
-      const response = await fetch(API_URL, {
-        method: 'PUT',
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: editingEntry.id,
-          venue: editingEntry.venue,
-          date: editingEntry.date,
-          forks: editingEntry.forks,
-          knives: editingEntry.knives,
-          steakKnives: editingEntry.steak_knives,
-          spoons: editingEntry.spoons,
-          dessertSpoons: editingEntry.dessert_spoons,
-          iceCooler: editingEntry.ice_cooler,
-          plates: editingEntry.plates,
-          sugarTongs: editingEntry.sugar_tongs,
-          iceTongs: editingEntry.ice_tongs,
-          ashtrays: editingEntry.ashtrays,
-          responsible_name: editingEntry.responsible_name,
-          responsible_date: editingEntry.responsible_date,
-        }),
-      });
-
-      if (response.ok) {
-        await loadAllData();
-        setIsEditDialogOpen(false);
-        setEditingEntry(null);
-        toast.success('Запись обновлена');
-      }
+      localStorageApi.updateEntry(editingEntry.id, editingEntry);
+      await loadAllData();
+      setIsEditDialogOpen(false);
+      setEditingEntry(null);
+      toast.success('Запись обновлена');
     } catch (error) {
       toast.error('Ошибка при обновлении');
       console.error(error);
@@ -256,15 +185,9 @@ const Index = () => {
     if (!confirm('Удалить эту запись?')) return;
 
     try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
-        method: 'DELETE',
-        mode: 'cors',
-      });
-
-      if (response.ok) {
-        await loadAllData();
-        toast.success('Запись удалена');
-      }
+      localStorageApi.deleteEntry(id);
+      await loadAllData();
+      toast.success('Запись удалена');
     } catch (error) {
       toast.error('Ошибка при удалении');
       console.error(error);
@@ -394,12 +317,15 @@ const Index = () => {
 
   const exportBackup = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/035aee39-78b7-4c55-9b8c-48bfe3133352', {
-        mode: 'cors',
-      });
-      const data = await response.json();
+      const allEntries = localStorageApi.getAllEntries();
+      const backupData = {
+        backup_date: new Date().toISOString(),
+        total_records: allEntries.length,
+        version: '1.0',
+        entries: allEntries,
+      };
       
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -410,7 +336,7 @@ const Index = () => {
       document.body.removeChild(a);
       
       toast.success('💾 Бэкап базы данных скачан!', {
-        description: `${data.total_records} записей сохранено`,
+        description: `${allEntries.length} записей сохранено`,
       });
     } catch (error) {
       toast.error('Ошибка при создании бэкапа');
@@ -516,6 +442,15 @@ const Index = () => {
 
   return (
     <div className={`min-h-screen ${bgGradient} transition-all duration-500`}>
+      <div className="bg-yellow-50 border-b-2 border-yellow-200 px-4 py-2">
+        <div className="container mx-auto flex items-center justify-center gap-2 text-sm text-yellow-800">
+          <Icon name="Wifi" size={16} className="text-yellow-600" />
+          <span className="font-medium">Автономный режим</span>
+          <span className="text-yellow-600">•</span>
+          <span className="text-xs">Данные хранятся локально в браузере</span>
+        </div>
+      </div>
+      
       <InventoryHeader
         currentVenue={currentVenue}
         colors={colors}
