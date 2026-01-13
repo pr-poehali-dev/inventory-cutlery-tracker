@@ -14,6 +14,10 @@ export const storageManager = {
     localStorage.setItem(MODE_KEY, mode);
   },
 
+  resetToApiMode: (): void => {
+    localStorage.setItem(MODE_KEY, 'api');
+  },
+
   getAllEntries: (): InventoryEntry[] => {
     try {
       const data = localStorage.getItem(STORAGE_KEY);

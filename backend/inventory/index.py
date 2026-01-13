@@ -1,5 +1,5 @@
 '''
-Business: API для управления инвентаризацией приборов по заведениям
+API для управления инвентаризацией приборов по заведениям (PORT и Диккенс)
 Args: event - dict с httpMethod, body, queryStringParameters
       context - объект с атрибутами request_id, function_name
 Returns: HTTP response dict с данными инвентаризации

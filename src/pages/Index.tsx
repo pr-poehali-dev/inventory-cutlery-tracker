@@ -505,6 +505,13 @@ const Index = () => {
     input.click();
   };
 
+  const tryReconnectApi = async () => {
+    storageManager.resetToApiMode();
+    setStorageMode('api');
+    toast.info('🔄 Переподключение к API...');
+    await loadAllData();
+  };
+
   const getChartData = () => {
     return [...entries]
       .reverse()
@@ -611,13 +618,22 @@ const Index = () => {
               <span className="font-medium">Локальный режим</span>
               <span className="text-xs">• API недоступен</span>
             </div>
-            <button
-              onClick={importBackup}
-              className="flex items-center gap-1 px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
-            >
-              <Icon name="Upload" size={14} />
-              Импорт бэкапа
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={tryReconnectApi}
+                className="flex items-center gap-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors"
+              >
+                <Icon name="RefreshCw" size={14} />
+                Переподключить API
+              </button>
+              <button
+                onClick={importBackup}
+                className="flex items-center gap-1 px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
+              >
+                <Icon name="Upload" size={14} />
+                Импорт бэкапа
+              </button>
+            </div>
           </div>
         </div>
       )}
