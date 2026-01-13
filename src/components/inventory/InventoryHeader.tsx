@@ -8,9 +8,11 @@ interface InventoryHeaderProps {
   onVenueChange: (venue: 'PORT' | 'Диккенс') => void;
   onExportExcel: () => void;
   onExportBackup: () => void;
+  storageMode?: 'api' | 'local';
+  onReconnectAPI?: () => void;
 }
 
-export const InventoryHeader = ({ currentVenue, colors, onVenueChange, onExportExcel, onExportBackup }: InventoryHeaderProps) => {
+export const InventoryHeader = ({ currentVenue, colors, onVenueChange, onExportExcel, onExportBackup, storageMode, onReconnectAPI }: InventoryHeaderProps) => {
   return (
     <header className="border-b border-stone-200/50 bg-white/98 backdrop-blur-xl shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -68,6 +70,17 @@ export const InventoryHeader = ({ currentVenue, colors, onVenueChange, onExportE
               <Icon name="Database" size={18} className="mr-2" />
               <span>Бэкап БД</span>
             </Button>
+
+            {storageMode === 'local' && onReconnectAPI && (
+              <Button 
+                onClick={onReconnectAPI} 
+                variant="outline"
+                className="shadow-lg font-bold px-6 py-3 text-base hover:scale-105 transition-transform border-2 border-orange-600 text-orange-700 hover:bg-orange-50 animate-pulse"
+              >
+                <Icon name="RefreshCw" size={18} className="mr-2" />
+                <span>Переподключить API</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

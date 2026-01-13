@@ -644,6 +644,8 @@ const Index = () => {
         onVenueChange={setCurrentVenue}
         onExportExcel={exportToExcel}
         onExportBackup={exportBackup}
+        storageMode={storageMode}
+        onReconnectAPI={tryReconnectApi}
       />
 
       <main className="container mx-auto px-4 py-8">
